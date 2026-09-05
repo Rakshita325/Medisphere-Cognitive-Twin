@@ -1,0 +1,801 @@
+
+[
+  {
+    "patientId": "P001",
+    "personalDetails": {
+      "firstName": "Rahul",
+      "lastName": "Sharma",
+      "gender": "male",
+      "birthDate": "1971-05-12",
+      "phone": "+91-9000000001"
+    },
+    "conditions": [
+      {
+        "name": "Type 2 Diabetes",
+        "status": "active",
+        "diagnosedDate": "2020-06-15"
+      },
+      {
+        "name": "Hypertension",
+        "status": "active",
+        "diagnosedDate": "2021-03-10"
+      }
+    ],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 88,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T09:30:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 96,
+        "unit": "%",
+        "recordedAt": "2026-09-04T09:30:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 98.6,
+        "unit": "F",
+        "recordedAt": "2026-09-04T09:30:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 135,
+        "diastolic": 85,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T09:30:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "Blood Glucose",
+        "value": 145,
+        "unit": "mg/dL",
+        "referenceRange": "70-140",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "HbA1c",
+        "value": 7.2,
+        "unit": "%",
+        "referenceRange": "4.0-5.6",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Total Cholesterol",
+        "value": 220,
+        "unit": "mg/dL",
+        "referenceRange": "125-200",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB001",
+      "reportName": "Diabetes Screening Panel",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 6540,
+      "sleepHours": 6.5,
+      "recordedAt": "2026-09-04T09:30:00"
+    }
+  },
+
+  {
+    "patientId": "P002",
+    "personalDetails": {
+      "firstName": "Priya",
+      "lastName": "Nair",
+      "gender": "female",
+      "birthDate": "1984-08-21",
+      "phone": "+91-9000000002"
+    },
+    "conditions": [
+      {
+        "name": "Asthma",
+        "status": "active",
+        "diagnosedDate": "2018-04-12"
+      }
+    ],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 76,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T09:35:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 98,
+        "unit": "%",
+        "recordedAt": "2026-09-04T09:35:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 98.2,
+        "unit": "F",
+        "recordedAt": "2026-09-04T09:35:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 118,
+        "diastolic": 78,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T09:35:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "Blood Glucose",
+        "value": 98,
+        "unit": "mg/dL",
+        "referenceRange": "70-140",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Total Cholesterol",
+        "value": 178,
+        "unit": "mg/dL",
+        "referenceRange": "125-200",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Hemoglobin",
+        "value": 13.4,
+        "unit": "g/dL",
+        "referenceRange": "12-16",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB002",
+      "reportName": "Routine Health Panel",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 8240,
+      "sleepHours": 7.2,
+      "recordedAt": "2026-09-04T09:35:00"
+    }
+  },
+
+  {
+    "patientId": "P003",
+    "personalDetails": {
+      "firstName": "Arjun",
+      "lastName": "Patel",
+      "gender": "male",
+      "birthDate": "1965-02-14",
+      "phone": "+91-9000000003"
+    },
+    "conditions": [
+      {
+        "name": "Coronary Artery Disease",
+        "status": "active",
+        "diagnosedDate": "2019-09-20"
+      },
+      {
+        "name": "Hypertension",
+        "status": "active",
+        "diagnosedDate": "2017-05-18"
+      }
+    ],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 94,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T09:40:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 94,
+        "unit": "%",
+        "recordedAt": "2026-09-04T09:40:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 98.9,
+        "unit": "F",
+        "recordedAt": "2026-09-04T09:40:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 148,
+        "diastolic": 92,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T09:40:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "Blood Glucose",
+        "value": 126,
+        "unit": "mg/dL",
+        "referenceRange": "70-140",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "LDL Cholesterol",
+        "value": 158,
+        "unit": "mg/dL",
+        "referenceRange": "0-130",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Total Cholesterol",
+        "value": 236,
+        "unit": "mg/dL",
+        "referenceRange": "125-200",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB003",
+      "reportName": "Cardiac Health Panel",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 4320,
+      "sleepHours": 5.8,
+      "recordedAt": "2026-09-04T09:40:00"
+    }
+  },
+
+  {
+    "patientId": "P004",
+    "personalDetails": {
+      "firstName": "Sneha",
+      "lastName": "Rao",
+      "gender": "female",
+      "birthDate": "1992-11-05",
+      "phone": "+91-9000000004"
+    },
+    "conditions": [
+      {
+        "name": "Iron Deficiency Anemia",
+        "status": "active",
+        "diagnosedDate": "2025-12-10"
+      }
+    ],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 82,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T09:45:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 99,
+        "unit": "%",
+        "recordedAt": "2026-09-04T09:45:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 98.1,
+        "unit": "F",
+        "recordedAt": "2026-09-04T09:45:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 112,
+        "diastolic": 74,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T09:45:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "Hemoglobin",
+        "value": 10.8,
+        "unit": "g/dL",
+        "referenceRange": "12-16",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Ferritin",
+        "value": 18,
+        "unit": "ng/mL",
+        "referenceRange": "15-150",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Blood Glucose",
+        "value": 92,
+        "unit": "mg/dL",
+        "referenceRange": "70-140",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB004",
+      "reportName": "Anemia Screening Panel",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 7120,
+      "sleepHours": 7.8,
+      "recordedAt": "2026-09-04T09:45:00"
+    }
+  },
+
+  {
+    "patientId": "P005",
+    "personalDetails": {
+      "firstName": "Vikram",
+      "lastName": "Iyer",
+      "gender": "male",
+      "birthDate": "1978-03-29",
+      "phone": "+91-9000000005"
+    },
+    "conditions": [
+      {
+        "name": "Hyperlipidemia",
+        "status": "active",
+        "diagnosedDate": "2022-07-14"
+      }
+    ],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 79,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T09:50:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 97,
+        "unit": "%",
+        "recordedAt": "2026-09-04T09:50:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 98.4,
+        "unit": "F",
+        "recordedAt": "2026-09-04T09:50:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 128,
+        "diastolic": 82,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T09:50:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "LDL Cholesterol",
+        "value": 172,
+        "unit": "mg/dL",
+        "referenceRange": "0-130",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "HDL Cholesterol",
+        "value": 42,
+        "unit": "mg/dL",
+        "referenceRange": "40-60",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Total Cholesterol",
+        "value": 248,
+        "unit": "mg/dL",
+        "referenceRange": "125-200",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB005",
+      "reportName": "Lipid Profile",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 5980,
+      "sleepHours": 6.9,
+      "recordedAt": "2026-09-04T09:50:00"
+    }
+  },
+
+  {
+    "patientId": "P006",
+    "personalDetails": {
+      "firstName": "Ananya",
+      "lastName": "Menon",
+      "gender": "female",
+      "birthDate": "1959-06-17",
+      "phone": "+91-9000000006"
+    },
+    "conditions": [
+      {
+        "name": "Type 2 Diabetes",
+        "status": "active",
+        "diagnosedDate": "2015-01-22"
+      },
+      {
+        "name": "Chronic Kidney Disease",
+        "status": "active",
+        "diagnosedDate": "2023-08-11"
+      }
+    ],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 91,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T09:55:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 93,
+        "unit": "%",
+        "recordedAt": "2026-09-04T09:55:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 99.1,
+        "unit": "F",
+        "recordedAt": "2026-09-04T09:55:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 142,
+        "diastolic": 88,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T09:55:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "Blood Glucose",
+        "value": 158,
+        "unit": "mg/dL",
+        "referenceRange": "70-140",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "HbA1c",
+        "value": 8.1,
+        "unit": "%",
+        "referenceRange": "4.0-5.6",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Creatinine",
+        "value": 1.8,
+        "unit": "mg/dL",
+        "referenceRange": "0.6-1.3",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB006",
+      "reportName": "Diabetes and Kidney Function Panel",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 3650,
+      "sleepHours": 5.5,
+      "recordedAt": "2026-09-04T09:55:00"
+    }
+  },
+
+  {
+    "patientId": "P007",
+    "personalDetails": {
+      "firstName": "Kiran",
+      "lastName": "Joshi",
+      "gender": "male",
+      "birthDate": "1988-01-30",
+      "phone": "+91-9000000007"
+    },
+    "conditions": [],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 72,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T10:00:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 99,
+        "unit": "%",
+        "recordedAt": "2026-09-04T10:00:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 98.0,
+        "unit": "F",
+        "recordedAt": "2026-09-04T10:00:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 116,
+        "diastolic": 76,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T10:00:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "Blood Glucose",
+        "value": 89,
+        "unit": "mg/dL",
+        "referenceRange": "70-140",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Total Cholesterol",
+        "value": 165,
+        "unit": "mg/dL",
+        "referenceRange": "125-200",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Hemoglobin",
+        "value": 15.1,
+        "unit": "g/dL",
+        "referenceRange": "13-17",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB007",
+      "reportName": "Routine Health Checkup",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 10240,
+      "sleepHours": 7.6,
+      "recordedAt": "2026-09-04T10:00:00"
+    }
+  },
+
+  {
+    "patientId": "P008",
+    "personalDetails": {
+      "firstName": "Meera",
+      "lastName": "Krishnan",
+      "gender": "female",
+      "birthDate": "1975-10-09",
+      "phone": "+91-9000000008"
+    },
+    "conditions": [
+      {
+        "name": "Hypothyroidism",
+        "status": "active",
+        "diagnosedDate": "2021-02-16"
+      }
+    ],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 74,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T10:05:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 98,
+        "unit": "%",
+        "recordedAt": "2026-09-04T10:05:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 97.9,
+        "unit": "F",
+        "recordedAt": "2026-09-04T10:05:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 122,
+        "diastolic": 80,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T10:05:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "TSH",
+        "value": 6.2,
+        "unit": "mIU/L",
+        "referenceRange": "0.4-4.0",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Free T4",
+        "value": 0.8,
+        "unit": "ng/dL",
+        "referenceRange": "0.8-1.8",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Total Cholesterol",
+        "value": 190,
+        "unit": "mg/dL",
+        "referenceRange": "125-200",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB008",
+      "reportName": "Thyroid Function Panel",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 6850,
+      "sleepHours": 6.8,
+      "recordedAt": "2026-09-04T10:05:00"
+    }
+  },
+
+  {
+    "patientId": "P009",
+    "personalDetails": {
+      "firstName": "Amit",
+      "lastName": "Verma",
+      "gender": "male",
+      "birthDate": "2001-04-26",
+      "phone": "+91-9000000009"
+    },
+    "conditions": [],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 68,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T10:10:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 99,
+        "unit": "%",
+        "recordedAt": "2026-09-04T10:10:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 98.3,
+        "unit": "F",
+        "recordedAt": "2026-09-04T10:10:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 110,
+        "diastolic": 72,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T10:10:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "Blood Glucose",
+        "value": 86,
+        "unit": "mg/dL",
+        "referenceRange": "70-140",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Total Cholesterol",
+        "value": 158,
+        "unit": "mg/dL",
+        "referenceRange": "125-200",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Hemoglobin",
+        "value": 15.4,
+        "unit": "g/dL",
+        "referenceRange": "13-17",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB009",
+      "reportName": "Young Adult Health Checkup",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 11800,
+      "sleepHours": 8.0,
+      "recordedAt": "2026-09-04T10:10:00"
+    }
+  },
+
+  {
+    "patientId": "P010",
+    "personalDetails": {
+      "firstName": "Lakshmi",
+      "lastName": "Reddy",
+      "gender": "female",
+      "birthDate": "1948-12-03",
+      "phone": "+91-9000000010"
+    },
+    "conditions": [
+      {
+        "name": "Osteoarthritis",
+        "status": "active",
+        "diagnosedDate": "2019-11-25"
+      },
+      {
+        "name": "Hypertension",
+        "status": "active",
+        "diagnosedDate": "2016-06-08"
+      }
+    ],
+    "vitals": [
+      {
+        "type": "Heart Rate",
+        "value": 86,
+        "unit": "bpm",
+        "recordedAt": "2026-09-04T10:15:00"
+      },
+      {
+        "type": "SpO2",
+        "value": 95,
+        "unit": "%",
+        "recordedAt": "2026-09-04T10:15:00"
+      },
+      {
+        "type": "Temperature",
+        "value": 98.7,
+        "unit": "F",
+        "recordedAt": "2026-09-04T10:15:00"
+      },
+      {
+        "type": "Blood Pressure",
+        "systolic": 140,
+        "diastolic": 86,
+        "unit": "mmHg",
+        "recordedAt": "2026-09-04T10:15:00"
+      }
+    ],
+    "labResults": [
+      {
+        "test": "Blood Glucose",
+        "value": 118,
+        "unit": "mg/dL",
+        "referenceRange": "70-140",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Vitamin D",
+        "value": 19,
+        "unit": "ng/mL",
+        "referenceRange": "20-50",
+        "recordedAt": "2026-09-03"
+      },
+      {
+        "test": "Total Cholesterol",
+        "value": 214,
+        "unit": "mg/dL",
+        "referenceRange": "125-200",
+        "recordedAt": "2026-09-03"
+      }
+    ],
+    "labReport": {
+      "reportId": "LAB010",
+      "reportName": "Senior Health Screening",
+      "status": "final",
+      "issuedDate": "2026-09-03"
+    },
+    "wearableData": {
+      "steps": 2980,
+      "sleepHours": 6.1,
+      "recordedAt": "2026-09-04T10:15:00"
+    }
+  }
+]
+
