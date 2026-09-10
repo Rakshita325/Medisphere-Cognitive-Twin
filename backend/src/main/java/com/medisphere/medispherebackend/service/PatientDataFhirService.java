@@ -41,6 +41,8 @@ public class PatientDataFhirService {
     private final IGenericClient fhirClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PatientDataFhirService.class);
+
     public PatientDataFhirService(IGenericClient fhirClient) {
         this.fhirClient = fhirClient;
     }
@@ -54,12 +56,30 @@ public class PatientDataFhirService {
                     importPatient(data, summary);
                 } catch (Exception exception) {
                     summary.errors.add((data == null ? "unknown" : data.getPatientId()) + ": " + exception.getMessage());
+                    if (isNetworkFailure(exception)) {
+                        log.warn("FHIR host unreachable during seed import ({}); aborting remaining imports.", exception.getMessage());
+                        break;
+                    }
                 }
             }
             return summary.message();
         } catch (Exception exception) {
-            throw new IllegalStateException("FHIR import failed: " + exception.getMessage(), exception);
+            log.warn("FHIR import skipped: {}", exception.getMessage());
+            return "FHIR import skipped: " + exception.getMessage();
         }
+    }
+
+    private boolean isNetworkFailure(Throwable t) {
+        while (t != null) {
+            if (t instanceof java.net.SocketException
+                    || t instanceof java.net.ConnectException
+                    || t instanceof java.net.UnknownHostException
+                    || t.getClass().getName().contains("FhirClientConnectionException")) {
+                return true;
+            }
+            t = t.getCause();
+        }
+        return false;
     }
 
     private void importPatient(PatientData data, ImportSummary summary) {

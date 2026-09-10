@@ -28,10 +28,25 @@ Do not commit credentials. The local properties file uses safe localhost default
 
 ## Run
 
+Start the local Kafka broker if it is not already running:
+
+```powershell
+docker compose up -d zookeeper kafka
+```
+
+Then start the backend:
+
 ```powershell
 $env:MONGODB_URI = "mongodb://localhost:27017/medisphere"
 $env:KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
+$env:SERVER_PORT = "8081"
 ./mvnw.cmd spring-boot:run
+```
+
+You can confirm Kafka is reachable with:
+
+```powershell
+Test-NetConnection -ComputerName localhost -Port 9092
 ```
 
 Run the frontend separately:

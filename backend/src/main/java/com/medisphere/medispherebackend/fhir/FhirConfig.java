@@ -12,9 +12,18 @@ public class FhirConfig {
     @Value("${medisphere.fhir.base-url:https://r4.quality.hl7.org/fhir}")
     private String fhirServerUrl;
 
+    @Value("${medisphere.fhir.connect-timeout:5000}")
+    private int connectTimeout;
+
+    @Value("${medisphere.fhir.read-timeout:10000}")
+    private int readTimeout;
+
     @Bean
     public FhirContext fhirContext() {
-        return FhirContext.forR4();
+        FhirContext fhirContext = FhirContext.forR4();
+        fhirContext.getRestfulClientFactory().setConnectTimeout(connectTimeout);
+        fhirContext.getRestfulClientFactory().setSocketTimeout(readTimeout);
+        return fhirContext;
     }
 
     @Bean
