@@ -34,3 +34,13 @@ build/
 
 ### Local secrets ###
 src/main/resources/application-local.properties
+
+### Python ML Service ###
+ml-service/venv/
+ml-service/__pycache__/
+ml-service/**/__pycache__/
+ml-service/**/*.pyc
+
+### Python environment/config ###
+ml-service/.env
+ml-service/.venv/

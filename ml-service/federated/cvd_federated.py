@@ -1,0 +1,279 @@
+import os
+import sys
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    roc_auc_score,
+    confusion_matrix,
+    classification_report
+)
+
+# Silence oneDNN & TensorFlow verbose info logs
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
+
+# Check for TensorFlow Federated (TFF)
+try:
+    import tensorflow_federated as tff
+    TFF_AVAILABLE = True
+except ImportError:
+    tff = None
+    TFF_AVAILABLE = False
+
+
+def create_keras_model(input_dim):
+    """
+    Creates a standard Multi-Layer Perceptron (MLP) for binary risk classification.
+    Used by all hospital nodes to ensure identical model architectures.
+    """
+    model = keras.Sequential([
+        layers.Input(shape=(input_dim,)),
+        layers.Dense(32, activation="relu", name="dense_1"),
+        layers.Dropout(0.2, name="dropout_1"),
+        layers.Dense(16, activation="relu", name="dense_2"),
+        layers.Dropout(0.1, name="dropout_2"),
+        layers.Dense(1, activation="sigmoid", name="output")
+    ])
+    model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=0.005),
+        loss=keras.losses.BinaryCrossentropy(),
+        metrics=["accuracy", keras.metrics.AUC(name="auc")]
+    )
+    return model
+
+
+def federated_averaging(hospital_weights, hospital_sample_counts):
+    """
+    Implements the standard FedAvg (Federated Averaging) algorithm:
+    W_global = sum_{k=1}^K (n_k / N_total) * W_k
+    where n_k is the number of local patient samples at Hospital k.
+    """
+    total_samples = sum(hospital_sample_counts)
+    num_layers = len(hospital_weights[0])
+    aggregated_weights = []
+
+    for layer_idx in range(num_layers):
+        layer_sum = np.zeros_like(hospital_weights[0][layer_idx])
+        for k in range(len(hospital_weights)):
+            weight_factor = hospital_sample_counts[k] / total_samples
+            layer_sum += weight_factor * hospital_weights[k][layer_idx]
+        aggregated_weights.append(layer_sum)
+
+    return aggregated_weights
+
+
+def main():
+    print("====================================================================")
+    print("   MEDISPHERE COGNITIVE TWIN - CVD FEDERATED LEARNING SIMULATION    ")
+    print("====================================================================\n")
+
+    # ============================================================
+    # 0. TENSORFLOW FEDERATED (TFF) ENVIRONMENT DIAGNOSTIC
+    # ============================================================
+    print("--- Environment Diagnostic ---")
+    print(f"Python Version:     {sys.version.split()[0]}")
+    print(f"TensorFlow Version: {tf.__version__}")
+    if TFF_AVAILABLE:
+        print(f"TensorFlow Federated: Available (v{tff.__version__})")
+    else:
+        print("TensorFlow Federated (TFF): Not installed in this environment.")
+        print("Note: TFF requires Linux/WSL2 and POSIX wheels (jaxlib).")
+        print("Running native FedAvg (Federated Averaging) 3-Hospital simulation.")
+    print("------------------------------\n")
+
+    # ============================================================
+    # 1. RESOLVE DATASET PATH
+    # ============================================================
+    data_path = "data/framingham_cleaned.csv"
+    if not os.path.exists(data_path) and os.path.exists(os.path.join("ml-service", "data", "framingham_cleaned.csv")):
+        data_path = os.path.join("ml-service", "data", "framingham_cleaned.csv")
+
+    if not os.path.exists(data_path):
+        print(f"Error: Dataset not found at {data_path}")
+        sys.exit(1)
+
+    print(f"Loading CVD dataset from: {data_path}...")
+    df = pd.read_csv(data_path)
+    print(f"Total dataset size: {df.shape[0]} patient records, {df.shape[1]} columns")
+
+    # Target and Features
+    target_col = "TenYearCHD"
+    X = df.drop(columns=[target_col]).copy()
+    y = df[target_col].values.astype(np.float32)
+    feature_names = list(X.columns)
+
+    # ============================================================
+    # 2. TRAIN / TEST SPLIT (HELD-OUT GLOBAL EVALUATION DATASET)
+    # ============================================================
+    # 20% held-out test data simulates an independent global test cohort
+    # to evaluate the federated model without leaking test records.
+    X_train_full, X_test, y_train_full, y_test = train_test_split(
+        X, y, test_size=0.20, random_state=42, stratify=y
+    )
+
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train_full).astype(np.float32)
+    X_test_scaled = scaler.transform(X_test).astype(np.float32)
+
+    print(f"Training pool: {X_train_scaled.shape[0]} patients")
+    print(f"Global test evaluation set: {X_test_scaled.shape[0]} patients\n")
+
+    # ============================================================
+    # 3. PARTITION DATA INTO 3 SIMULATED HOSPITALS
+    # ============================================================
+    # Notice: Patient data stays strictly local to each hospital.
+    # We partition the training pool into 3 distinct, isolated partitions.
+    np.random.seed(42)
+    total_train = len(X_train_scaled)
+    indices = np.random.permutation(total_train)
+
+    # Simulated Hospital 1: Metro General Hospital (Urban Cohort, ~40%)
+    # Simulated Hospital 2: St. Jude Medical Center (Suburban Cohort, ~35%)
+    # Simulated Hospital 3: Valley Community Clinic (Rural Cohort, ~25%)
+    split_1 = int(0.40 * total_train)
+    split_2 = int(0.75 * total_train)
+
+    hospitals_data = {
+        "Hospital 1 (Metro General - Urban)": {
+            "X": X_train_scaled[indices[:split_1]],
+            "y": y_train_full[indices[:split_1]]
+        },
+        "Hospital 2 (St. Jude - Suburban)": {
+            "X": X_train_scaled[indices[split_1:split_2]],
+            "y": y_train_full[indices[split_1:split_2]]
+        },
+        "Hospital 3 (Valley Clinic - Rural)": {
+            "X": X_train_scaled[indices[split_2:]],
+            "y": y_train_full[indices[split_2:]]
+        }
+    }
+
+    print("====================================================================")
+    print("       SIMULATED HOSPITAL DATA PARTITIONS (LOCAL DATA SILOS)        ")
+    print("====================================================================")
+    for name, data in hospitals_data.items():
+        pos_rate = np.mean(data["y"]) * 100
+        print(f" * {name}: {len(data['X'])} patients (Positive CVD rate: {pos_rate:.1f}%)")
+    print("Patient records remain strictly confined inside each hospital silo.")
+    print("Only model parameters (weights) are transmitted to the coordinator.\n")
+
+    # ============================================================
+    # 4. INITIALIZE GLOBAL MODEL & FEDERATED HYPERPARAMETERS
+    # ============================================================
+    input_dim = len(feature_names)
+    global_model = create_keras_model(input_dim)
+    global_weights = global_model.get_weights()
+
+    num_federated_rounds = 5
+    local_epochs = 3
+    batch_size = 32
+
+    print("====================================================================")
+    print(f" STARTING FEDERATED TRAINING: {num_federated_rounds} ROUNDS (FedAvg) ")
+    print("====================================================================")
+
+    # Initial baseline evaluation before any training
+    initial_preds = global_model.predict(X_test_scaled, verbose=0).flatten()
+    initial_auc = roc_auc_score(y_test, initial_preds)
+    initial_acc = accuracy_score(y_test, (initial_preds >= 0.5).astype(int))
+    print(f"Round 0 (Initial Global Weights): Test Acc={initial_acc:.4f}, Test ROC-AUC={initial_auc:.4f}\n")
+
+    # ============================================================
+    # 5. FEDERATED TRAINING ROUNDS
+    # ============================================================
+    for round_num in range(1, num_federated_rounds + 1):
+        print(f">>> FEDERATED ROUND {round_num}/{num_federated_rounds}")
+        round_hospital_weights = []
+        round_sample_counts = []
+
+        # Each hospital performs local training in isolation
+        for hospital_name, data in hospitals_data.items():
+            # 1. Instantiate local hospital model with current global weights
+            local_model = create_keras_model(input_dim)
+            local_model.set_weights(global_weights)
+
+            # 2. Local training on private hospital data
+            history = local_model.fit(
+                data["X"], data["y"],
+                epochs=local_epochs,
+                batch_size=batch_size,
+                verbose=0,
+                shuffle=True
+            )
+
+            local_loss = history.history["loss"][-1]
+            local_acc = history.history["accuracy"][-1]
+            print(f"  - [{hospital_name}] Local training ({local_epochs} epochs): Loss={local_loss:.4f}, Acc={local_acc:.4f}")
+
+            # 3. Collect updated model weights (NO patient data transferred)
+            round_hospital_weights.append(local_model.get_weights())
+            round_sample_counts.append(len(data["X"]))
+
+        # 4. Central Coordinator performs Federated Averaging (FedAvg)
+        global_weights = federated_averaging(round_hospital_weights, round_sample_counts)
+        global_model.set_weights(global_weights)
+
+        # 5. Evaluate updated global model on held-out test cohort
+        y_prob = global_model.predict(X_test_scaled, verbose=0).flatten()
+        y_pred = (y_prob >= 0.5).astype(int)
+        round_acc = accuracy_score(y_test, y_pred)
+        round_auc = roc_auc_score(y_test, y_prob)
+
+        print(f"  => Round {round_num} Global Evaluation: Test Acc={round_acc:.4f} ({round_acc*100:.2f}%), Test ROC-AUC={round_auc:.4f}\n")
+
+    # ============================================================
+    # 6. FINAL GLOBAL MODEL EVALUATION
+    # ============================================================
+    final_probs = global_model.predict(X_test_scaled, verbose=0).flatten()
+    final_preds = (final_probs >= 0.5).astype(int)
+
+    acc = accuracy_score(y_test, final_preds)
+    prec = precision_score(y_test, final_preds, zero_division=0)
+    rec = recall_score(y_test, final_preds, zero_division=0)
+    f1 = f1_score(y_test, final_preds, zero_division=0)
+    auc = roc_auc_score(y_test, final_probs)
+    cm = confusion_matrix(y_test, final_preds)
+
+    print("====================================================================")
+    print("          FINAL GLOBAL FEDERATED CVD MODEL EVALUATION               ")
+    print("====================================================================")
+    print(f"Accuracy:         {acc:.4f} ({acc * 100:.2f}%)")
+    print(f"Precision:        {prec:.4f}")
+    print(f"Recall:           {rec:.4f}")
+    print(f"F1-score:         {f1:.4f}")
+    print(f"ROC-AUC:          {auc:.4f}")
+
+    print("\nConfusion Matrix:")
+    print(f"[[TN={cm[0,0]}  FP={cm[0,1]}]")
+    print(f" [FN={cm[1,0]}  TP={cm[1,1]}]]")
+
+    print("\nDetailed Classification Report:")
+    print(classification_report(y_test, final_preds, digits=4, zero_division=0))
+
+    # Save final global model
+    models_dir = "models"
+    if not os.path.exists(models_dir) and os.path.exists(os.path.join("ml-service", "models")):
+        models_dir = os.path.join("ml-service", "models")
+    os.makedirs(models_dir, exist_ok=True)
+    save_path = os.path.join(models_dir, "cvd_federated_global.keras")
+    global_model.save(save_path)
+    print(f"Global Federated CVD model saved to: {save_path}")
+
+    print("\nNote: The 3 hospitals are an educational simulation for the MediSphere")
+    print("internship project, using public research data (Framingham Heart Study).")
+    print("This is not a clinically validated diagnostic system.")
+    print("====================================================================\n")
+
+
+if __name__ == "__main__":
+    main()
