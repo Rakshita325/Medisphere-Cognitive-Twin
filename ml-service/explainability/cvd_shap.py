@@ -1,14 +1,79 @@
 import os
 import sys
-import pandas as pd
-import numpy as np
-import joblib
-import shap
+from pathlib import Path
 
-# Configure matplotlib for headless / non-interactive environment
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import shap
+from tensorflow import keras
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+ML_SERVICE_DIR = SCRIPT_DIR.parent
+if str(ML_SERVICE_DIR) not in sys.path:
+    sys.path.insert(0, str(ML_SERVICE_DIR))
+
+from utils.preprocessing import load_feature_names, prepare_model_input
+
+
+MODEL_DIR = ML_SERVICE_DIR / "models"
+OUTPUT_DIR = ML_SERVICE_DIR / "explainability"
+OUTPUT_DIR.mkdir(exist_ok=True)
+
+
+def get_base_value(explainer):
+    expected = np.asarray(explainer.expected_value)
+    if expected.ndim == 0:
+        return float(expected)
+    expected = expected.reshape(-1)
+    return float(expected[0])
+
+
+def compute_shap_values(model, model_name, df, feature_names, sample_index=0, cohort_size=100):
+    patient_series = df.iloc[sample_index]
+    patient_features = patient_series[feature_names].tolist()
+    patient_input = prepare_model_input(model_name, patient_features)
+
+    predicted_prob = float(model.predict(patient_input, verbose=0).reshape(-1)[0])
+    print(f"\nPatient #{sample_index} raw feature vector loaded from {model_name.upper()} dataset")
+    print(f"Model probability (positive class): {predicted_prob:.4f}")
+
+    cohort_df = df[feature_names].head(cohort_size)
+    background = np.vstack([
+        prepare_model_input(model_name, row.tolist())
+        for _, row in cohort_df.iterrows()
+    ])
+
+    explainer = shap.DeepExplainer(model, background)
+    patient_values = np.asarray(explainer.shap_values(patient_input, check_additivity=False))
+    if patient_values.ndim == 3:
+        patient_vector = patient_values[0, :, 0]
+    else:
+        patient_vector = patient_values[0]
+
+    cohort_values = np.asarray(explainer.shap_values(background, check_additivity=False))
+    if cohort_values.ndim == 3:
+        cohort_vector = cohort_values[:, :, 0]
+    else:
+        cohort_vector = cohort_values
+
+    patient_exp = shap.Explanation(
+        values=patient_vector,
+        base_values=get_base_value(explainer),
+        data=patient_series[feature_names].to_numpy(dtype=float),
+        feature_names=feature_names,
+    )
+
+    cohort_exp = shap.Explanation(
+        values=cohort_vector,
+        base_values=np.full(len(cohort_df), get_base_value(explainer), dtype=float),
+        data=cohort_df.to_numpy(dtype=float),
+        feature_names=feature_names,
+    )
+
+    return patient_exp, cohort_exp, predicted_prob, patient_series
 
 
 def main():
@@ -16,121 +81,38 @@ def main():
     print("      MEDISPHERE COGNITIVE TWIN - CVD SHAP EXPLAINABILITY   ")
     print("============================================================\n")
 
-    # ============================================================
-    # 1. RESOLVE FILE PATHS
-    # ============================================================
-    # Support execution from either ml-service/ or repository root
-    base_dir = "."
-    if not os.path.exists("models") and os.path.exists("ml-service/models"):
-        base_dir = "ml-service"
+    model_name = "cvd"
+    model_path = MODEL_DIR / "cvd_federated_global.keras"
+    data_path = ML_SERVICE_DIR / "data" / "framingham_cleaned.csv"
+    feature_names = load_feature_names(model_name)
 
-    model_path = os.path.join(base_dir, "models", "cvd_random_forest.pkl")
-    features_path = os.path.join(base_dir, "models", "cvd_features.pkl")
-    data_path = os.path.join(base_dir, "data", "framingham_cleaned.csv")
-    output_dir = os.path.join(base_dir, "explainability")
+    if not model_path.exists():
+        raise FileNotFoundError(f"Missing CVD model: {model_path}")
+    if not data_path.exists():
+        raise FileNotFoundError(f"Missing CVD dataset: {data_path}")
 
-    os.makedirs(output_dir, exist_ok=True)
-
-    # Check that required model exists
-    if not os.path.exists(model_path):
-        print(f"Error: Model file not found at {model_path}")
-        print("Please train the CVD model first using: python prediction/train_cvd_model.py")
-        sys.exit(1)
-
-    if not os.path.exists(data_path):
-        print(f"Error: Dataset not found at {data_path}")
-        sys.exit(1)
-
-    # ============================================================
-    # 2. LOAD MODEL AND FEATURE NAMES
-    # ============================================================
     print(f"Loading trained CVD model from: {model_path}")
-    model = joblib.load(model_path)
+    model = keras.models.load_model(str(model_path))
+    print(f"Loaded {len(feature_names)} feature names for the active federated model.")
 
-    if os.path.exists(features_path):
-        feature_names = joblib.load(features_path)
-        print(f"Loaded {len(feature_names)} feature names from: {features_path}")
-    else:
-        # Fallback to model feature names if file not found
-        feature_names = list(model.feature_names_in_)
-        print(f"Loaded {len(feature_names)} feature names from model attributes.")
-
-    # ============================================================
-    # 3. LOAD DATASET AND SELECT PATIENT SAMPLE
-    # ============================================================
-    print(f"Loading dataset from: {data_path}")
     df = pd.read_csv(data_path)
+    if "TenYearCHD" in df.columns:
+        df = df.drop(columns=["TenYearCHD"])
 
-    # Drop target column if present to get feature matrix X
-    target_col = "TenYearCHD"
-    if target_col in df.columns:
-        X = df.drop(columns=[target_col])[feature_names]
-        y = df[target_col]
-    else:
-        X = df[feature_names]
-        y = None
+    patient_exp, cohort_exp, risk_probability, patient_series = compute_shap_values(
+        model=model,
+        model_name=model_name,
+        df=df,
+        feature_names=feature_names,
+        sample_index=0,
+        cohort_size=min(100, len(df)),
+    )
 
-    # Select a patient sample (index 0 by default, or an illustrative sample)
-    sample_index = 0
-    patient_df = X.iloc[[sample_index]]
-    patient_series = X.iloc[sample_index]
-
-    print(f"\nAnalyzing Patient at index: {sample_index}")
-    if y is not None:
-        print(f"Actual Clinical Outcome (TenYearCHD): {y.iloc[sample_index]}")
-
-    # ============================================================
-    # 4. MODEL PREDICTION FOR PATIENT
-    # ============================================================
-    predicted_class = model.predict(patient_df)[0]
-    predicted_probs = model.predict_proba(patient_df)[0]
-    cvd_risk_prob = predicted_probs[1]
-
-    print(f"\nModel Prediction:")
-    print(f" - Predicted Class: {predicted_class} ({'High CVD Risk' if predicted_class == 1 else 'Low CVD Risk'})")
-    print(f" - Predicted Risk Probability: {cvd_risk_prob:.4f} ({cvd_risk_prob * 100:.2f}%)")
-
-    # ============================================================
-    # 5. PRINT PATIENT'S FEATURE VALUES
-    # ============================================================
-    print("\n------------------------------------------------------------")
-    print("PATIENT FEATURE VALUES")
-    print("------------------------------------------------------------")
-    for feature in feature_names:
-        print(f"  {feature:<20}: {patient_series[feature]}")
-
-    # ============================================================
-    # 6. INITIALIZE SHAP TREE EXPLAINER
-    # ============================================================
-    # TreeExplainer is an optimized SHAP explainer specifically designed
-    # for tree-based ensemble models like Random Forest.
-    print("\nComputing SHAP values using TreeExplainer...")
-    explainer = shap.TreeExplainer(model)
-    explanation = explainer(patient_df)
-
-    # In binary classification, SHAP explanations can have 2 output channels
-    # (channel 0 for Class 0 / No Risk, channel 1 for Class 1 / CVD Risk).
-    # We focus on channel 1 to explain the positive risk score.
-    if len(explanation.shape) == 3 and explanation.shape[2] == 2:
-        patient_explanation = explanation[0, :, 1]
-        shap_values_class1 = explanation.values[0, :, 1]
-        base_value = explanation.base_values[0, 1]
-    else:
-        patient_explanation = explanation[0]
-        shap_values_class1 = explanation.values[0]
-        base_value = explanation.base_values[0]
-
-    print(f"Model Base Value (Expected Population Risk): {base_value:.4f}")
-    print(f"Patient Predicted Risk Probability:         {cvd_risk_prob:.4f}")
-
-    # ============================================================
-    # 7. FEATURE CONTRIBUTIONS (SHAP VALUES)
-    # ============================================================
     shap_summary = pd.DataFrame({
         "Feature": feature_names,
-        "Patient Value": [patient_series[f] for f in feature_names],
-        "SHAP Contribution": shap_values_class1,
-        "Absolute Impact": np.abs(shap_values_class1)
+        "Patient Value": patient_series[feature_names].to_numpy(dtype=float),
+        "SHAP Contribution": patient_exp.values,
+        "Absolute Impact": np.abs(patient_exp.values),
     }).sort_values(by="Absolute Impact", ascending=False).reset_index(drop=True)
 
     print("\n------------------------------------------------------------")
@@ -141,16 +123,11 @@ def main():
         direction = "Increases Risk" if row["SHAP Contribution"] >= 0 else "Decreases Risk"
         print(f"  {row['Feature']:<20} = {row['Patient Value']:<8} | SHAP: {sign}{abs(row['SHAP Contribution']):.4f} ({direction})")
 
-    # ============================================================
-    # 8. GROUP BY RISK DIRECTION (INCREASING VS DECREASING)
-    # ============================================================
-    increasing_risk = shap_summary[shap_summary["SHAP Contribution"] > 0]
-    decreasing_risk = shap_summary[shap_summary["SHAP Contribution"] < 0]
-
     print("\n------------------------------------------------------------")
     print("FACTORS INCREASING CVD RISK FOR THIS PATIENT:")
     print("------------------------------------------------------------")
-    if len(increasing_risk) == 0:
+    increasing_risk = shap_summary[shap_summary["SHAP Contribution"] > 0]
+    if increasing_risk.empty:
         print("  None (all measured features contribute favorably)")
     else:
         for _, row in increasing_risk.iterrows():
@@ -159,58 +136,43 @@ def main():
     print("\n------------------------------------------------------------")
     print("FACTORS DECREASING CVD RISK FOR THIS PATIENT:")
     print("------------------------------------------------------------")
-    if len(decreasing_risk) == 0:
+    decreasing_risk = shap_summary[shap_summary["SHAP Contribution"] < 0]
+    if decreasing_risk.empty:
         print("  None (no protective factors observed)")
     else:
         for _, row in decreasing_risk.iterrows():
             print(f"  [-] {row['Feature']:<18} ({row['Patient Value']:<6}): {row['SHAP Contribution']:.4f} toward lower risk")
 
-    # ============================================================
-    # 9. GENERATE AND SAVE SHAP VISUALIZATIONS
-    # ============================================================
     print("\nGenerating SHAP plots...")
 
-    # Plot 1: Patient-level Waterfall Plot
-    # Shows the journey from the baseline risk to the patient's risk
-    waterfall_path = os.path.join(output_dir, "cvd_shap_waterfall.png")
+    waterfall_path = OUTPUT_DIR / "cvd_shap_waterfall.png"
     plt.figure(figsize=(10, 6))
-    shap.plots.waterfall(patient_explanation, max_display=12, show=False)
-    plt.title(f"SHAP Waterfall: CVD Risk for Patient #{sample_index}", fontsize=12, pad=15)
+    shap.plots.waterfall(patient_exp, max_display=12, show=False)
+    plt.title("SHAP Waterfall: CVD Risk for Patient #0", fontsize=12, pad=15)
     plt.tight_layout()
     plt.savefig(waterfall_path, dpi=300, bbox_inches="tight")
     plt.close()
     print(f"Saved patient waterfall plot: {waterfall_path}")
 
-    # Plot 2: Patient-level Bar Plot
-    # Ranks the individual feature contributions for this patient
-    bar_path = os.path.join(output_dir, "cvd_shap_bar.png")
+    bar_path = OUTPUT_DIR / "cvd_shap_bar.png"
     plt.figure(figsize=(10, 6))
-    shap.plots.bar(patient_explanation, max_display=12, show=False)
-    plt.title(f"SHAP Feature Attribution: Patient #{sample_index}", fontsize=12, pad=15)
+    shap.plots.bar(patient_exp, max_display=12, show=False)
+    plt.title("SHAP Feature Attribution: Patient #0", fontsize=12, pad=15)
     plt.tight_layout()
     plt.savefig(bar_path, dpi=300, bbox_inches="tight")
     plt.close()
     print(f"Saved patient bar plot:       {bar_path}")
 
-    # Plot 3: Global Cohort Summary Plot (first 100 samples for overview)
-    summary_path = os.path.join(output_dir, "cvd_shap_summary.png")
-    cohort_size = min(100, len(X))
-    cohort_df = X.iloc[:cohort_size]
-    cohort_explanation = explainer(cohort_df)
-
-    if len(cohort_explanation.shape) == 3 and cohort_explanation.shape[2] == 2:
-        cohort_explanation_class1 = cohort_explanation[:, :, 1]
-    else:
-        cohort_explanation_class1 = cohort_explanation
-
+    summary_path = OUTPUT_DIR / "cvd_shap_summary.png"
     plt.figure(figsize=(10, 6))
-    shap.plots.beeswarm(cohort_explanation_class1, max_display=12, show=False)
-    plt.title(f"SHAP Beeswarm Summary (Cohort of {cohort_size} Patients)", fontsize=12, pad=15)
+    shap.plots.beeswarm(cohort_exp, max_display=12, show=False)
+    plt.title(f"SHAP Beeswarm Summary (Cohort of {len(cohort_exp.data)} Patients)", fontsize=12, pad=15)
     plt.tight_layout()
     plt.savefig(summary_path, dpi=300, bbox_inches="tight")
     plt.close()
     print(f"Saved cohort summary plot:   {summary_path}")
 
+    print(f"\nPatient positive-class probability: {risk_probability:.4f}")
     print("\n============================================================")
     print("CVD SHAP Explainability analysis completed successfully!")
     print("============================================================\n")

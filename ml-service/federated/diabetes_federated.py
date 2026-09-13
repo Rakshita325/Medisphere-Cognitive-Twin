@@ -1,7 +1,14 @@
 import os
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
@@ -14,6 +21,14 @@ from sklearn.metrics import (
     classification_report
 )
 
+from utils.model_registry import (
+    get_model_config,
+    metadata_file_path,
+    model_file_path,
+    round_history_file_path,
+    save_json,
+)
+
 # Silence oneDNN & TensorFlow verbose info logs
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
@@ -21,14 +36,6 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
-
-# Check for TensorFlow Federated (TFF)
-try:
-    import tensorflow_federated as tff
-    TFF_AVAILABLE = True
-except ImportError:
-    tff = None
-    TFF_AVAILABLE = False
 
 
 def create_keras_model(input_dim):
@@ -72,23 +79,53 @@ def federated_averaging(hospital_weights, hospital_sample_counts):
     return aggregated_weights
 
 
+def determine_convergence(round_history):
+    if len(round_history) < 2:
+        return {
+            "status": "insufficient_data",
+            "message": "At least two rounds are required to evaluate convergence."
+        }
+
+    losses = [entry["training_loss"] for entry in round_history]
+    accuracies = [entry["validation_accuracy"] for entry in round_history]
+
+    loss_is_decreasing = losses[-1] < losses[0]
+    acc_is_improving = accuracies[-1] >= accuracies[0]
+    stable_accuracy = accuracies[-1] >= max(accuracies[:-1]) - 0.01
+
+    if loss_is_decreasing and (acc_is_improving or stable_accuracy):
+        status = "converging"
+        message = "Loss is decreasing and accuracy is improving or stabilizing."
+    else:
+        status = "mixed"
+        message = "Training completed, but the recorded metrics do not yet clearly demonstrate convergence."
+
+    return {
+        "status": status,
+        "message": message,
+        "loss_trend": "decreasing" if loss_is_decreasing else "not_decreasing",
+        "accuracy_trend": "improving_or_stable" if (acc_is_improving or stable_accuracy) else "not_improving",
+        "first_round_loss": losses[0],
+        "latest_round_loss": losses[-1],
+        "first_round_accuracy": accuracies[0],
+        "latest_round_accuracy": accuracies[-1],
+    }
+
+
 def main():
+    config = get_model_config("diabetes")
     print("====================================================================")
     print(" MEDISPHERE COGNITIVE TWIN - DIABETES FEDERATED LEARNING SIMULATION ")
     print("====================================================================\n")
 
     # ============================================================
-    # 0. TENSORFLOW FEDERATED (TFF) ENVIRONMENT DIAGNOSTIC
+    # 0. FEDERATED LEARNING ENVIRONMENT DIAGNOSTIC
     # ============================================================
     print("--- Environment Diagnostic ---")
     print(f"Python Version:     {sys.version.split()[0]}")
     print(f"TensorFlow Version: {tf.__version__}")
-    if TFF_AVAILABLE:
-        print(f"TensorFlow Federated: Available (v{tff.__version__})")
-    else:
-        print("TensorFlow Federated (TFF): Not installed in this environment.")
-        print("Note: TFF requires Linux/WSL2 and POSIX wheels (jaxlib).")
-        print("Running native FedAvg (Federated Averaging) 3-Hospital simulation.")
+    print("Federated Learning Backend: Custom TensorFlow FedAvg")
+    print("No TensorFlow Federated dependency is required for this workflow.")
     print("------------------------------\n")
 
     # ============================================================
@@ -185,6 +222,7 @@ def main():
     num_federated_rounds = 5
     local_epochs = 3
     batch_size = 32
+    round_history = []
 
     print("====================================================================")
     print(f" STARTING FEDERATED TRAINING: {num_federated_rounds} ROUNDS (FedAvg) ")
@@ -203,6 +241,8 @@ def main():
         print(f">>> FEDERATED ROUND {round_num}/{num_federated_rounds}")
         round_hospital_weights = []
         round_sample_counts = []
+        round_local_losses = []
+        round_local_accs = []
 
         # Each hospital trains locally on its private silo
         for hospital_name, data in hospitals_data.items():
@@ -221,6 +261,8 @@ def main():
 
             local_loss = history.history["loss"][-1]
             local_acc = history.history["accuracy"][-1]
+            round_local_losses.append(float(local_loss))
+            round_local_accs.append(float(local_acc))
             print(f"  - [{hospital_name}] Local training ({local_epochs} epochs): Loss={local_loss:.4f}, Acc={local_acc:.4f}")
 
             # 3. Collect updated model weights (NO raw patient data transferred)
@@ -236,6 +278,18 @@ def main():
         y_pred = (y_prob >= 0.5).astype(int)
         round_acc = accuracy_score(y_test, y_pred)
         round_auc = roc_auc_score(y_test, y_prob)
+        round_loss = float(np.mean(tf.keras.losses.binary_crossentropy(y_test, y_prob).numpy()))
+
+        round_record = {
+            "round": round_num,
+            "training_loss": float(np.mean(round_local_losses)),
+            "training_accuracy": float(np.mean(round_local_accs)),
+            "validation_loss": round_loss,
+            "validation_accuracy": float(round_acc),
+            "validation_auc": float(round_auc),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        round_history.append(round_record)
 
         print(f"  => Round {round_num} Global Evaluation: Test Acc={round_acc:.4f} ({round_acc*100:.2f}%), Test ROC-AUC={round_auc:.4f}\n")
 
@@ -273,9 +327,29 @@ def main():
     if not os.path.exists(models_dir) and os.path.exists(os.path.join("ml-service", "models")):
         models_dir = os.path.join("ml-service", "models")
     os.makedirs(models_dir, exist_ok=True)
-    save_path = os.path.join(models_dir, "diabetes_federated_global.keras")
+    save_path = str(model_file_path("diabetes"))
     global_model.save(save_path)
     print(f"Global Federated Diabetes model saved to: {save_path}")
+
+    history_path = round_history_file_path("diabetes")
+    save_json(history_path, round_history)
+    print(f"Diabetes training history saved to: {history_path}")
+
+    metadata = {
+        "model_name": config["model_name"],
+        "model_version": config["version"],
+        "training_type": config["training_type"],
+        "client_count": config["client_count"],
+        "federated_rounds": num_federated_rounds,
+        "final_accuracy": float(round_history[-1]["validation_accuracy"]),
+        "final_loss": float(round_history[-1]["validation_loss"]),
+        "final_auc": float(round_history[-1]["validation_auc"]),
+        "trained_at": datetime.now(timezone.utc).isoformat(),
+        "convergence": determine_convergence(round_history),
+    }
+    metadata_path = metadata_file_path("diabetes")
+    save_json(metadata_path, metadata)
+    print(f"Diabetes model metadata saved to: {metadata_path}")
 
     print("\nNote: The 3 hospitals are an educational simulation for the MediSphere")
     print("internship project, using public research data (Pima Indians Diabetes Dataset).")

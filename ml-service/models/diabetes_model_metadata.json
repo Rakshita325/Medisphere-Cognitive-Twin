@@ -1,0 +1,21 @@
+{
+  "model_name": "Diabetes Federated Global Model",
+  "model_version": "DIABETES-v1.0",
+  "training_type": "Federated Learning",
+  "client_count": 3,
+  "federated_rounds": 5,
+  "final_accuracy": 0.8051948051948052,
+  "final_loss": 0.4316358268260956,
+  "final_auc": 0.8683333333333334,
+  "trained_at": "2026-09-12T18:22:43.326420+00:00",
+  "convergence": {
+    "status": "converging",
+    "message": "Loss is decreasing and accuracy is improving or stabilizing.",
+    "loss_trend": "decreasing",
+    "accuracy_trend": "improving_or_stable",
+    "first_round_loss": 0.478960116704305,
+    "latest_round_loss": 0.34650442004203796,
+    "first_round_accuracy": 0.7857142857142857,
+    "latest_round_accuracy": 0.8051948051948052
+  }
+}

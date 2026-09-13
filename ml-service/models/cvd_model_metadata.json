@@ -1,0 +1,21 @@
+{
+  "model_name": "CVD Federated Global Model",
+  "model_version": "CVD-v1.0",
+  "training_type": "Federated Learning",
+  "client_count": 3,
+  "federated_rounds": 5,
+  "final_accuracy": 0.8436578171091446,
+  "final_loss": 0.3979381322860718,
+  "final_auc": 0.6975081699346405,
+  "trained_at": "2026-09-12T18:20:55.520157+00:00",
+  "convergence": {
+    "status": "converging",
+    "message": "Loss is decreasing and accuracy is improving or stabilizing.",
+    "loss_trend": "decreasing",
+    "accuracy_trend": "improving_or_stable",
+    "first_round_loss": 0.3927333950996399,
+    "latest_round_loss": 0.3657308717568715,
+    "first_round_accuracy": 0.8510324483775811,
+    "latest_round_accuracy": 0.8436578171091446
+  }
+}
