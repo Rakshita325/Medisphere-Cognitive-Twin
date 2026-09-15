@@ -38,8 +38,9 @@ public class ConsentController {
     @PutMapping("/revoke/{patientId}")
     public String revokeConsent(@PathVariable String patientId) {
 
-        Consent consent = consentRepository.findByPatientId(patientId)
-                .orElseThrow(() -> new RuntimeException("Consent not found"));
+        Consent consent = consentRepository.findByPatientId(patientId).stream()
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Consent not found"));
 
         consent.setGranted(false);
 
@@ -55,7 +56,8 @@ public class ConsentController {
     @GetMapping("/{patientId}")
     public Consent getConsent(@PathVariable String patientId) {
 
-        return consentRepository.findByPatientId(patientId)
-                .orElseThrow(() -> new RuntimeException("Consent not found"));
+        return consentRepository.findByPatientId(patientId).stream()
+            .findFirst()
+            .orElseThrow(() -> new RuntimeException("Consent not found"));
     }
 }

@@ -1,14 +1,36 @@
 // API Client for MediSphere Backend & FHIR Integration
 
 const USER_PROFILE_KEY = 'medisphere_user_profile';
-let sessionCredentials = null;
+const AUTH_KEY = 'medisphere_session_auth';
+
+let sessionCredentials = (() => {
+  try {
+    const item = localStorage.getItem(AUTH_KEY);
+    return item ? JSON.parse(item) : null;
+  } catch {
+    return null;
+  }
+})();
 
 export function getStoredAuth() {
+  if (!sessionCredentials) {
+    try {
+      const item = localStorage.getItem(AUTH_KEY);
+      sessionCredentials = item ? JSON.parse(item) : null;
+    } catch {
+      sessionCredentials = null;
+    }
+  }
   return sessionCredentials;
 }
 
 export function setStoredAuth(credentials) {
   sessionCredentials = credentials || null;
+  if (credentials) {
+    try { localStorage.setItem(AUTH_KEY, JSON.stringify(credentials)); } catch {}
+  } else {
+    try { localStorage.removeItem(AUTH_KEY); } catch {}
+  }
 }
 
 export function getStoredProfile() {
@@ -37,15 +59,8 @@ export function setStoredProfile(profile) {
 export function getCurrentUser() {
   const profile = getStoredProfile();
   const auth = getStoredAuth();
-  if (profile && profile.username) {
+  if (profile && profile.username && auth && auth.username) {
     return profile;
-  }
-  if (auth && auth.username) {
-    return {
-      username: auth.username,
-      fullName: auth.username,
-      role: 'UNKNOWN'
-    };
   }
   return null;
 }
@@ -55,6 +70,8 @@ export function getCurrentUser() {
  */
 export function clearAuth() {
   localStorage.removeItem(USER_PROFILE_KEY);
+  try { localStorage.removeItem(AUTH_KEY); } catch {}
+  sessionCredentials = null;
 }
 
 function getAuthHeader() {
@@ -73,26 +90,55 @@ async function request(url, options = {}) {
 
   try {
     const response = await fetch(url, { ...options, headers });
-    if (response.status === 401 || response.status === 403) {
-      throw new Error('UNAUTHORIZED');
-    }
+
     if (!response.ok) {
-      const text = await response.text();
-      let errorMessage = text;
+      let errorMessage = '';
       try {
-        const errorJson = JSON.parse(text);
-        errorMessage = errorJson.message || errorJson.error || text;
+        const text = await response.text();
+        try {
+          const errorJson = JSON.parse(text);
+          errorMessage = errorJson.message || errorJson.error || text;
+        } catch {
+          errorMessage = text;
+        }
       } catch {
-        // use raw text
+        // ignore read error
       }
+
+      if (response.status === 401) {
+        throw new Error('Your session has expired. Please log in again.');
+      }
+
+      if (response.status === 403) {
+        if (errorMessage && errorMessage.toLowerCase().includes('consent')) {
+          throw new Error("Patient consent is required to access this patient's data.");
+        }
+        throw new Error(errorMessage || 'Access denied.');
+      }
+
+      if (response.status === 503) {
+        throw new Error('AI prediction service is currently unavailable.');
+      }
+
+      if (response.status >= 500) {
+        if (errorMessage && (errorMessage.toLowerCase().includes('connect') || errorMessage.toLowerCase().includes('service unavailable') || errorMessage.toLowerCase().includes('flask'))) {
+          throw new Error('AI prediction service is currently unavailable.');
+        }
+        throw new Error(errorMessage || 'Unable to generate prediction. Please try again.');
+      }
+
       throw new Error(errorMessage || `HTTP Error ${response.status}`);
     }
+
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       return await response.json();
     }
     return await response.text();
   } catch (err) {
+    if (err.name === 'TypeError' && err.message.toLowerCase().includes('fetch')) {
+      throw new Error('AI prediction service is currently unavailable.');
+    }
     console.error(`API Error on ${url}:`, err);
     throw err;
   }
@@ -178,6 +224,21 @@ export async function getFhirPatients() {
 }
 
 /**
+ * Fetch all ML demo patients (Milestone 2 synthetic patients for risk prediction)
+ * Returns ML001-ML005 with pre-computed feature values for CVD and Diabetes models
+ */
+export async function getMLDemoPatients() {
+  return await request('/api/ml/demo-patients');
+}
+
+/**
+ * Fetch a specific ML demo patient by ID
+ */
+export async function getMLDemoPatient(patientId) {
+  return await request(`/api/ml/demo-patients/${encodeURIComponent(patientId)}`);
+}
+
+/**
  * Save/Create PatientTwin from FHIR Patient ID
  */
 export async function savePatientTwin(patientId) {
@@ -233,4 +294,38 @@ export function calculateAge(birthDateStr) {
   const ageDifMs = Date.now() - birthDate.getTime();
   const ageDate = new Date(ageDifMs);
   return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
+
+// ============================================================
+// ML Prediction API
+// ============================================================
+
+/**
+ * Run CVD risk prediction via Spring Boot ML proxy.
+ * POST /api/ml/predict/cvd — expects { features: number[] } (15 features)
+ */
+export async function predictCvd(features) {
+  return await request('/api/ml/predict/cvd', {
+    method: 'POST',
+    body: JSON.stringify({ features }),
+  });
+}
+
+/**
+ * Run Diabetes risk prediction via Spring Boot ML proxy.
+ * POST /api/ml/predict/diabetes — expects { features: number[] } (8 features)
+ */
+export async function predictDiabetes(features) {
+  return await request('/api/ml/predict/diabetes', {
+    method: 'POST',
+    body: JSON.stringify({ features }),
+  });
+}
+
+/**
+ * Fetch model metadata from Spring Boot ML proxy.
+ * GET /api/ml/models/:modelName — modelName is "cvd" or "diabetes"
+ */
+export async function getModelMetadata(modelName) {
+  return await request(`/api/ml/models/${encodeURIComponent(modelName)}`);
 }

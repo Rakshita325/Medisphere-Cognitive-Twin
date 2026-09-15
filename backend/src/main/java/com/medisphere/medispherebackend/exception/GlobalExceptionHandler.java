@@ -3,11 +3,13 @@ package com.medisphere.medispherebackend.exception;
 import ca.uhn.fhir.rest.client.exceptions.FhirClientConnectionException;
 import ca.uhn.fhir.rest.server.exceptions.BaseServerResponseException;
 import com.medisphere.medispherebackend.dto.ErrorResponse;
+import com.medisphere.medispherebackend.dto.MlApiErrorResponse;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -29,7 +31,14 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(exception.getStatusCode().value(), exception.getReason(), Instant.now()));
     }
 
-    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, IllegalArgumentException.class})
+    @ExceptionHandler(MlPredictionException.class)
+    public ResponseEntity<MlApiErrorResponse> handleMlPredictionException(MlPredictionException exception) {
+        log.warn("ML prediction error: {} - {}", exception.getError(), exception.getMessage());
+        return ResponseEntity.status(exception.getStatus())
+                .body(new MlApiErrorResponse(exception.getError(), exception.getMessage()));
+    }
+
+    @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class, IllegalArgumentException.class, HttpMessageNotReadableException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception exception) {
         log.warn("Bad request: {}", exception.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

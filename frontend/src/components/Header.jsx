@@ -17,7 +17,7 @@ export default function Header({ theme, onToggleTheme }) {
       <div className="header-left">
         <div className="brand-logo">
           <Activity className="brand-icon" size={26} />
-          <span>MediSphere Cognitive Twin</span>
+          <span>MediSphere</span>
         </div>
       </div>
 

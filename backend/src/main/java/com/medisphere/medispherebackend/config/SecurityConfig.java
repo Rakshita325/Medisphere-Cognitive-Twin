@@ -1,5 +1,6 @@
 package com.medisphere.medispherebackend.config;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,6 +21,10 @@ public class SecurityConfig {
                         // Authentication APIs (Public)
                         .requestMatchers("/api/auth/**")
                         .permitAll()
+
+                        // ML prediction APIs
+                        .requestMatchers("/api/ml/**")
+                        .hasAnyRole("ADMIN", "DOCTOR")
 
                         // Patient Twin APIs
                         .requestMatchers("/api/patient-twins/**")
@@ -53,7 +58,9 @@ public class SecurityConfig {
                         .anyRequest()
                         .permitAll()
                 )
-                .httpBasic(httpBasic -> {});
+                .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint((request, response, authException) -> {
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
+                }));
 
         return http.build();
     }

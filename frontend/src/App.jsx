@@ -10,6 +10,18 @@ import Patient360Dashboard from './pages/Patient360Dashboard';
 import PatientsPage from './pages/PatientsPage';
 import PatientDetailPage from './pages/PatientDetailPage';
 import DigitalTwinsPage from './pages/DigitalTwinsPage';
+import RiskPredictionsPage from './pages/RiskPredictionsPage';
+import ShapExplainabilityPage from './pages/ShapExplainabilityPage';
+import AnalyticsPage from './pages/AnalyticsPage';
+import ModelInfoPage from './pages/ModelInfoPage';
+import PlaceholderPage from './pages/PlaceholderPage';
+
+import {
+  TrendingUp,
+  Bell,
+  ClipboardList,
+  FileBarChart
+} from 'lucide-react';
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { isAuthenticated, hasRole } = useAuth();
@@ -64,6 +76,53 @@ function AuthenticatedLayout() {
             <Route path="/twins" element={
               <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
                 <DigitalTwinsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/risk-predictions" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
+                <RiskPredictionsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/shap" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
+                <ShapExplainabilityPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/analytics" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
+                <AnalyticsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/alerts" element={
+              <ProtectedRoute>
+                <PlaceholderPage
+                  title="Alerts"
+                  description="Real-time clinical alerts and notifications"
+                  icon={Bell}
+                />
+              </ProtectedRoute>
+            } />
+            <Route path="/care-plans" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
+                <PlaceholderPage
+                  title="Care Plans"
+                  description="Patient care plan management and tracking"
+                  icon={ClipboardList}
+                />
+              </ProtectedRoute>
+            } />
+            <Route path="/reports" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
+                <PlaceholderPage
+                  title="Reports"
+                  description="Clinical reports and documentation"
+                  icon={FileBarChart}
+                />
+              </ProtectedRoute>
+            } />
+            <Route path="/model-info" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
+                <ModelInfoPage />
               </ProtectedRoute>
             } />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

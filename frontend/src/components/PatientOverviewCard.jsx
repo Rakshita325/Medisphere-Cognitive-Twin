@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, 
   Calendar, 
@@ -7,7 +8,8 @@ import {
   Pill, 
   Stethoscope, 
   Clock,
-  Dna
+  Dna,
+  BrainCircuit
 } from 'lucide-react';
 import { getPatientName, calculateAge } from '../services/api';
 
@@ -19,6 +21,8 @@ export default function PatientOverviewCard({
   onViewTimeline, 
   savingTwin 
 }) {
+  const navigate = useNavigate();
+
   if (!patient) {
     return (
       <div className="overview-card">
@@ -165,7 +169,7 @@ export default function PatientOverviewCard({
       </div>
 
       {/* Action Buttons Toolbar */}
-      <div className="action-buttons-bar">
+      <div className="action-buttons-bar" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
         <button 
           className="btn-primary" 
           onClick={() => onSaveTwin(patient.id)}
@@ -173,6 +177,15 @@ export default function PatientOverviewCard({
         >
           <Dna size={16} />
           {savingTwin ? 'Saving Twin...' : (twinData ? 'Update Twin' : 'Save / Create Twin')}
+        </button>
+
+        <button 
+          className="btn-secondary" 
+          onClick={() => navigate(`/risk-predictions?patientId=${encodeURIComponent(patient.id)}`)}
+          style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+        >
+          <BrainCircuit size={16} />
+          Generate AI Prediction
         </button>
 
         <button className="btn-secondary" onClick={onViewTimeline}>

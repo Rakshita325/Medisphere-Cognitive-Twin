@@ -61,6 +61,8 @@ src/main/resources/application-local.properties
 # Python ML Service
 # ============================================================
 
+.venv/
+venv/
 ml-service/venv/
 ml-service/.venv/
 ml-service/env/

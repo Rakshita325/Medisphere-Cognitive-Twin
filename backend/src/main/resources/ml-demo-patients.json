@@ -1,0 +1,217 @@
+[
+  {
+    "patientId": "ML001",
+    "patientSource": "ML_DEMO",
+    "mlReady": true,
+    "cohort": "Milestone 2 ML Demo",
+    "displayName": "Demo Patient 01",
+    "personalDetails": {
+      "firstName": "Arun",
+      "lastName": "Kumar",
+      "gender": "male",
+      "birthDate": "1998-03-15",
+      "age": 26
+    },
+    "cvdFeatures": {
+      "age": 26,
+      "education": 4,
+      "sex": 1,
+      "is_smoking": 0,
+      "cigsPerDay": 0,
+      "BPMeds": 0,
+      "prevalentStroke": 0,
+      "prevalentHyp": 0,
+      "diabetes": 0,
+      "totChol": 165,
+      "sysBP": 115,
+      "diaBP": 75,
+      "BMI": 22.5,
+      "heartRate": 68,
+      "glucose": 95
+    },
+    "diabetesFeatures": {
+      "Pregnancies": 0,
+      "Glucose": 95,
+      "BloodPressure": 75,
+      "SkinThickness": 20,
+      "Insulin": 30,
+      "BMI": 22.5,
+      "DiabetesPedigreeFunction": 0.155,
+      "Age": 26
+    },
+    "riskProfile": "low-risk",
+    "description": "Young, healthy male with excellent cardiovascular and metabolic health. No risk factors."
+  },
+  {
+    "patientId": "ML002",
+    "patientSource": "ML_DEMO",
+    "mlReady": true,
+    "cohort": "Milestone 2 ML Demo",
+    "displayName": "Demo Patient 02",
+    "personalDetails": {
+      "firstName": "Priya",
+      "lastName": "Singh",
+      "gender": "female",
+      "birthDate": "1974-07-22",
+      "age": 50
+    },
+    "cvdFeatures": {
+      "age": 50,
+      "education": 2,
+      "sex": 0,
+      "is_smoking": 0,
+      "cigsPerDay": 0,
+      "BPMeds": 1,
+      "prevalentStroke": 0,
+      "prevalentHyp": 1,
+      "diabetes": 0,
+      "totChol": 215,
+      "sysBP": 135,
+      "diaBP": 85,
+      "BMI": 26.8,
+      "heartRate": 72,
+      "glucose": 110
+    },
+    "diabetesFeatures": {
+      "Pregnancies": 2,
+      "Glucose": 110,
+      "BloodPressure": 85,
+      "SkinThickness": 24,
+      "Insulin": 60,
+      "BMI": 26.8,
+      "DiabetesPedigreeFunction": 0.325,
+      "Age": 50
+    },
+    "riskProfile": "moderate-cvd-risk",
+    "description": "Middle-aged female with controlled hypertension, elevated cholesterol, and mild metabolic indicators. Moderate CVD risk."
+  },
+  {
+    "patientId": "ML003",
+    "patientSource": "ML_DEMO",
+    "mlReady": true,
+    "cohort": "Milestone 2 ML Demo",
+    "displayName": "Demo Patient 03",
+    "personalDetails": {
+      "firstName": "Rajesh",
+      "lastName": "Patel",
+      "gender": "male",
+      "birthDate": "1962-11-08",
+      "age": 62
+    },
+    "cvdFeatures": {
+      "age": 62,
+      "education": 2,
+      "sex": 1,
+      "is_smoking": 1,
+      "cigsPerDay": 15,
+      "BPMeds": 1,
+      "prevalentStroke": 0,
+      "prevalentHyp": 1,
+      "diabetes": 1,
+      "totChol": 248,
+      "sysBP": 150,
+      "diaBP": 92,
+      "BMI": 29.2,
+      "heartRate": 78,
+      "glucose": 145
+    },
+    "diabetesFeatures": {
+      "Pregnancies": 0,
+      "Glucose": 145,
+      "BloodPressure": 92,
+      "SkinThickness": 28,
+      "Insulin": 95,
+      "BMI": 29.2,
+      "DiabetesPedigreeFunction": 0.542,
+      "Age": 62
+    },
+    "riskProfile": "high-cvd-risk",
+    "description": "Senior male with multiple cardiovascular risk factors: active smoker, hypertension, diabetes, elevated cholesterol. High CVD risk."
+  },
+  {
+    "patientId": "ML004",
+    "patientSource": "ML_DEMO",
+    "mlReady": true,
+    "cohort": "Milestone 2 ML Demo",
+    "displayName": "Demo Patient 04",
+    "personalDetails": {
+      "firstName": "Divya",
+      "lastName": "Reddy",
+      "gender": "female",
+      "birthDate": "1986-05-30",
+      "age": 38
+    },
+    "cvdFeatures": {
+      "age": 38,
+      "education": 4,
+      "sex": 0,
+      "is_smoking": 0,
+      "cigsPerDay": 0,
+      "BPMeds": 0,
+      "prevalentStroke": 0,
+      "prevalentHyp": 0,
+      "diabetes": 1,
+      "totChol": 205,
+      "sysBP": 125,
+      "diaBP": 78,
+      "BMI": 28.5,
+      "heartRate": 70,
+      "glucose": 165
+    },
+    "diabetesFeatures": {
+      "Pregnancies": 3,
+      "Glucose": 165,
+      "BloodPressure": 78,
+      "SkinThickness": 32,
+      "Insulin": 125,
+      "BMI": 28.5,
+      "DiabetesPedigreeFunction": 0.468,
+      "Age": 38
+    },
+    "riskProfile": "diabetes-focused",
+    "description": "Younger female with Type 2 diabetes, elevated glucose, and higher insulin levels. Strong diabetes risk indicators."
+  },
+  {
+    "patientId": "ML005",
+    "patientSource": "ML_DEMO",
+    "mlReady": true,
+    "cohort": "Milestone 2 ML Demo",
+    "displayName": "Demo Patient 05",
+    "personalDetails": {
+      "firstName": "Vikram",
+      "lastName": "Gupta",
+      "gender": "male",
+      "birthDate": "1968-09-12",
+      "age": 56
+    },
+    "cvdFeatures": {
+      "age": 56,
+      "education": 2,
+      "sex": 1,
+      "is_smoking": 1,
+      "cigsPerDay": 20,
+      "BPMeds": 1,
+      "prevalentStroke": 1,
+      "prevalentHyp": 1,
+      "diabetes": 1,
+      "totChol": 268,
+      "sysBP": 158,
+      "diaBP": 98,
+      "BMI": 31.5,
+      "heartRate": 82,
+      "glucose": 178
+    },
+    "diabetesFeatures": {
+      "Pregnancies": 0,
+      "Glucose": 178,
+      "BloodPressure": 98,
+      "SkinThickness": 35,
+      "Insulin": 155,
+      "BMI": 31.5,
+      "DiabetesPedigreeFunction": 0.685,
+      "Age": 56
+    },
+    "riskProfile": "combined-high-risk",
+    "description": "Older male with severe combined risk profile: history of stroke, active smoking, hypertension, diabetes, obesity, and very high glucose. Highest combined risk."
+  }
+]

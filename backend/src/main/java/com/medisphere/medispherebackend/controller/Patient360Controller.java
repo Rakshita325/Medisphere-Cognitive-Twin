@@ -38,6 +38,6 @@ public class Patient360Controller {
                 fhirPatientService.getDiagnosticReports(sourcePatientId),
                 fhirPatientService.getWearables(sourcePatientId),
                 patientTwinService.getBySourcePatientId(sourcePatientId),
-                consentRepository.findByPatientId(sourcePatientId).map(consent -> consent.isGranted()).orElse(false));
+                consentRepository.findByPatientId(sourcePatientId).stream().anyMatch(consent -> consent.isGranted()));
     }
 }

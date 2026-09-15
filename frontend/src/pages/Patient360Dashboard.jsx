@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { RefreshCw, AlertCircle } from 'lucide-react';
 import StatsCards from '../components/StatsCards';
 import PatientSelector from '../components/PatientSelector';
@@ -8,6 +9,9 @@ import ActionModal from '../components/ActionModal';
 import { getFhirPatients, getPatientTwins, getPatient360, savePatientTwin } from '../services/api';
 
 export default function Patient360Dashboard() {
+  const [searchParams] = useSearchParams();
+  const urlPatientId = searchParams.get('patientId');
+
   const [patients, setPatients] = useState([]);
   const [twins, setTwins] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -24,21 +28,36 @@ export default function Patient360Dashboard() {
     setLoading(true);
     setError(null);
     try {
-      // 1. Fetch real patients from backend FHIR endpoint
-      const patientsData = await getFhirPatients();
-      const patientsList = Array.isArray(patientsData) ? patientsData : [];
+      const [patientsResult, twinsResult] = await Promise.allSettled([
+        getFhirPatients(),
+        getPatientTwins().catch((twinErr) => {
+          console.warn('Could not load existing twins list:', twinErr);
+          return [];
+        })
+      ]);
+
+      const patientsList = patientsResult.status === 'fulfilled' && Array.isArray(patientsResult.value)
+        ? patientsResult.value
+        : [];
+
       setPatients(patientsList);
+      setTwins(twinsResult.status === 'fulfilled' && Array.isArray(twinsResult.value) ? twinsResult.value : []);
 
       if (patientsList.length > 0) {
-        setSelectedPatient(patientsList[0]);
+        if (urlPatientId) {
+          const match = patientsList.find(p => String(p.id) === String(urlPatientId) || String(p.sourcePatientId) === String(urlPatientId));
+          if (match) {
+            setSelectedPatient(match);
+            return;
+          }
+        }
+        if (!selectedPatient) {
+          setSelectedPatient(patientsList[0]);
+        }
       }
 
-      // 2. Fetch saved digital twins from backend MongoDB endpoint
-      try {
-        const twinsData = await getPatientTwins();
-        setTwins(Array.isArray(twinsData) ? twinsData : []);
-      } catch (twinErr) {
-        console.warn('Could not load existing twins list:', twinErr);
+      if (patientsResult.status === 'rejected') {
+        throw patientsResult.reason;
       }
     } catch (err) {
       console.error('Failed to load Patient 360 data:', err);
@@ -53,11 +72,30 @@ export default function Patient360Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (!selectedPatient) return;
+    if (!selectedPatient) {
+      setPatient360(null);
+      return;
+    }
+
+    let isActive = true;
     const sourcePatientId = selectedPatient.sourcePatientId || selectedPatient.id;
+
     getPatient360(sourcePatientId)
-      .then(setPatient360)
-      .catch(err => setError(err.message || 'Unable to load Patient 360 data.'));
+      .then((data) => {
+        if (isActive) {
+          setPatient360(data);
+        }
+      })
+      .catch((err) => {
+        if (isActive) {
+          setPatient360(null);
+          setError(err.message || 'Unable to load Patient 360 data.');
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
   }, [selectedPatient]);
 
   // Find twin data for selected patient

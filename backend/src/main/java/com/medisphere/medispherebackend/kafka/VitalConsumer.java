@@ -9,15 +9,17 @@ import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Patient;
 import org.hl7.fhir.r4.model.Quantity;
 import org.hl7.fhir.r4.model.Reference;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 
 @Service
+@ConditionalOnProperty(name = "medisphere.kafka.enabled", havingValue = "true")
 public class VitalConsumer {
 
     private static final Logger logger = LoggerFactory.getLogger(VitalConsumer.class);

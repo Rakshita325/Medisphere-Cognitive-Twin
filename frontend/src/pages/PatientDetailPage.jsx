@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Dna, Calendar, User, Hash, RefreshCw,
-  AlertCircle, CheckCircle, FileText
+  AlertCircle, CheckCircle, FileText, BrainCircuit
 } from 'lucide-react';
 import { getFhirPatients, getPatientTwins, savePatientTwin, getPatientName, calculateAge } from '../services/api';
 import ActionModal from '../components/ActionModal';
@@ -120,10 +120,20 @@ export default function PatientDetailPage() {
           <h1>Patient Details</h1>
           <p>{name}</p>
         </div>
-        <Link to="/patients" className="btn-secondary">
-          <ArrowLeft size={16} />
-          Back to Patients
-        </Link>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <Link
+            to={`/risk-predictions?patientId=${encodeURIComponent(patient.id)}`}
+            className="btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+          >
+            <BrainCircuit size={16} />
+            Generate AI Prediction
+          </Link>
+          <Link to="/patients" className="btn-secondary">
+            <ArrowLeft size={16} />
+            Back to Patients
+          </Link>
+        </div>
       </div>
 
       {/* Patient Info Card */}

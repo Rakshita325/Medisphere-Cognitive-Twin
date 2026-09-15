@@ -8,6 +8,8 @@ import com.medisphere.medispherebackend.model.User;
 import com.medisphere.medispherebackend.repository.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,6 +18,8 @@ import java.time.LocalDateTime;
 
 @Service
 public class AuthService implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -94,10 +98,14 @@ public class AuthService implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Seed/migrate default accounts with BCrypt passwords if not present
-        seedUserIfNotExists("doctor1", "Dr. Sarah Mitchell", "doctor123", Role.DOCTOR);
-        seedUserIfNotExists("admin1", "System Administrator", "admin123", Role.ADMIN);
-        seedUserIfNotExists("nurse1", "Nurse James Wilson", "nurse123", Role.NURSE);
+        try {
+            // Seed/migrate default accounts with BCrypt passwords if not present
+            seedUserIfNotExists("doctor1", "Dr. Sarah Mitchell", "doctor123", Role.DOCTOR);
+            seedUserIfNotExists("admin1", "System Administrator", "admin123", Role.ADMIN);
+            seedUserIfNotExists("nurse1", "Nurse James Wilson", "nurse123", Role.NURSE);
+        } catch (Exception exception) {
+            log.warn("Unable to seed default users because MongoDB is unavailable: {}", exception.getMessage());
+        }
     }
 
     private void seedUserIfNotExists(String username, String fullName, String rawPassword, Role role) {

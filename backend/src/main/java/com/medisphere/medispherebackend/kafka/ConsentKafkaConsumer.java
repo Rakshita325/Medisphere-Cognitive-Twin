@@ -1,10 +1,12 @@
 package com.medisphere.medispherebackend.kafka;
 
 import com.medisphere.medispherebackend.model.Consent;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
+@ConditionalOnProperty(name = "medisphere.kafka.enabled", havingValue = "true")
 public class ConsentKafkaConsumer {
 
     @KafkaListener(

@@ -23,11 +23,10 @@ public class ConsentAuthorizationService {
                 .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()))) {
             return true;
         }
-        if (consentRepository.findByPatientId(patientId).map(consent -> consent.isGranted()).orElse(false)) return true;
+        if (consentRepository.findByPatientId(patientId).stream().anyMatch(consent -> consent.isGranted())) return true;
         String sourcePatientId = resolveSourcePatientId(patientId);
-        return sourcePatientId != null && consentRepository.findByPatientId(sourcePatientId)
-                .map(consent -> consent.isGranted())
-                .orElse(false);
+        return sourcePatientId != null && consentRepository.findByPatientId(sourcePatientId).stream()
+            .anyMatch(consent -> consent.isGranted());
     }
 
     private String resolveSourcePatientId(String patientId) {
