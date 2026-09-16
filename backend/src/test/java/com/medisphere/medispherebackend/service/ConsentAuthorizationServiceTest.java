@@ -30,7 +30,7 @@ class ConsentAuthorizationServiceTest {
     void grantedConsentAllowsClinicalUser() {
         allowRole("DOCTOR");
         Consent consent = new Consent("P001", "doctor1", "healthcare", true);
-        when(consentRepository.findByPatientId("P001")).thenReturn(Optional.of(consent));
+        when(consentRepository.findByPatientId("P001")).thenReturn(java.util.List.of(consent));
 
         assertTrue(new ConsentAuthorizationService(consentRepository, fhirClient).isAllowed("P001"));
     }
@@ -39,7 +39,7 @@ class ConsentAuthorizationServiceTest {
     void revokedConsentDeniesClinicalUser() {
         allowRole("DOCTOR");
         Consent consent = new Consent("P001", "doctor1", "healthcare", false);
-        when(consentRepository.findByPatientId("P001")).thenReturn(Optional.of(consent));
+        when(consentRepository.findByPatientId("P001")).thenReturn(java.util.List.of(consent));
 
         assertFalse(new ConsentAuthorizationService(consentRepository, fhirClient).isAllowed("P001"));
     }
