@@ -1,0 +1,121 @@
+patientId,type,value,unit,systolicBP,diastolicBP,expectedAnomaly
+P001,Heart Rate,50.0,BPM,,,false
+P001,Heart Rate,120.0,BPM,,,false
+P001,Heart Rate,60.0,BPM,,,false
+P001,Heart Rate,65.0,BPM,,,false
+P001,Heart Rate,70.0,BPM,,,false
+P001,Heart Rate,72.0,BPM,,,false
+P001,Heart Rate,75.0,BPM,,,false
+P001,Heart Rate,78.0,BPM,,,false
+P001,Heart Rate,80.0,BPM,,,false
+P001,Heart Rate,84.0,BPM,,,false
+P001,Heart Rate,90.0,BPM,,,false
+P001,Heart Rate,95.0,BPM,,,false
+P001,Heart Rate,100.0,BPM,,,false
+P001,Heart Rate,110.0,BPM,,,false
+P001,Heart Rate,115.0,BPM,,,false
+P001,Heart Rate,49.0,BPM,,,true
+P001,Heart Rate,45.0,BPM,,,true
+P001,Heart Rate,40.0,BPM,,,true
+P001,Heart Rate,38.0,BPM,,,true
+P001,Heart Rate,35.0,BPM,,,true
+P001,Heart Rate,121.0,BPM,,,true
+P001,Heart Rate,125.0,BPM,,,true
+P001,Heart Rate,130.0,BPM,,,true
+P001,Heart Rate,135.0,BPM,,,true
+P001,Heart Rate,140.0,BPM,,,true
+P001,Heart Rate,145.0,BPM,,,true
+P001,Heart Rate,150.0,BPM,,,true
+P001,Heart Rate,160.0,BPM,,,true
+P001,Heart Rate,170.0,BPM,,,true
+P001,Heart Rate,180.0,BPM,,,true
+P002,SpO2,92.0,%,,,false
+P002,SpO2,93.0,%,,,false
+P002,SpO2,94.0,%,,,false
+P002,SpO2,95.0,%,,,false
+P002,SpO2,96.0,%,,,false
+P002,SpO2,96.5,%,,,false
+P002,SpO2,97.0,%,,,false
+P002,SpO2,97.5,%,,,false
+P002,SpO2,98.0,%,,,false
+P002,SpO2,98.5,%,,,false
+P002,SpO2,99.0,%,,,false
+P002,SpO2,99.5,%,,,false
+P002,SpO2,100.0,%,,,false
+P002,SpO2,94.5,%,,,false
+P002,SpO2,95.5,%,,,false
+P002,SpO2,91.0,%,,,true
+P002,SpO2,91.5,%,,,true
+P002,SpO2,90.0,%,,,true
+P002,SpO2,89.0,%,,,true
+P002,SpO2,88.0,%,,,true
+P002,SpO2,87.0,%,,,true
+P002,SpO2,86.0,%,,,true
+P002,SpO2,85.0,%,,,true
+P002,SpO2,84.0,%,,,true
+P002,SpO2,83.0,%,,,true
+P002,SpO2,82.0,%,,,true
+P002,SpO2,80.0,%,,,true
+P002,SpO2,78.0,%,,,true
+P002,SpO2,75.0,%,,,true
+P002,SpO2,70.0,%,,,true
+P001,Blood Pressure,,mmHg,140.0,90.0,false
+P001,Blood Pressure,,mmHg,120.0,80.0,false
+P001,Blood Pressure,,mmHg,110.0,70.0,false
+P001,Blood Pressure,,mmHg,115.0,75.0,false
+P001,Blood Pressure,,mmHg,118.0,78.0,false
+P001,Blood Pressure,,mmHg,122.0,82.0,false
+P001,Blood Pressure,,mmHg,125.0,80.0,false
+P001,Blood Pressure,,mmHg,128.0,84.0,false
+P001,Blood Pressure,,mmHg,130.0,85.0,false
+P001,Blood Pressure,,mmHg,135.0,85.0,false
+P001,Blood Pressure,,mmHg,138.0,88.0,false
+P001,Blood Pressure,,mmHg,100.0,65.0,false
+P001,Blood Pressure,,mmHg,105.0,70.0,false
+P001,Blood Pressure,,mmHg,132.0,82.0,false
+P001,Blood Pressure,,mmHg,139.0,89.0,false
+P001,Blood Pressure,,mmHg,141.0,85.0,true
+P001,Blood Pressure,,mmHg,130.0,91.0,true
+P001,Blood Pressure,,mmHg,141.0,91.0,true
+P001,Blood Pressure,,mmHg,145.0,88.0,true
+P001,Blood Pressure,,mmHg,135.0,95.0,true
+P001,Blood Pressure,,mmHg,150.0,90.0,true
+P001,Blood Pressure,,mmHg,140.0,95.0,true
+P001,Blood Pressure,,mmHg,155.0,95.0,true
+P001,Blood Pressure,,mmHg,160.0,100.0,true
+P001,Blood Pressure,,mmHg,165.0,102.0,true
+P001,Blood Pressure,,mmHg,170.0,105.0,true
+P001,Blood Pressure,,mmHg,175.0,110.0,true
+P001,Blood Pressure,,mmHg,180.0,115.0,true
+P001,Blood Pressure,,mmHg,190.0,120.0,true
+P001,Blood Pressure,,mmHg,200.0,125.0,true
+P002,Temperature,35.0,°C,,,false
+P002,Temperature,38.0,°C,,,false
+P002,Temperature,36.0,°C,,,false
+P002,Temperature,36.2,°C,,,false
+P002,Temperature,36.5,°C,,,false
+P002,Temperature,36.7,°C,,,false
+P002,Temperature,36.8,°C,,,false
+P002,Temperature,37.0,°C,,,false
+P002,Temperature,37.1,°C,,,false
+P002,Temperature,37.2,°C,,,false
+P002,Temperature,37.3,°C,,,false
+P002,Temperature,37.4,°C,,,false
+P002,Temperature,37.5,°C,,,false
+P002,Temperature,37.6,°C,,,false
+P002,Temperature,37.8,°C,,,false
+P002,Temperature,34.9,°C,,,true
+P002,Temperature,34.5,°C,,,true
+P002,Temperature,34.0,°C,,,true
+P002,Temperature,33.5,°C,,,true
+P002,Temperature,33.0,°C,,,true
+P002,Temperature,32.0,°C,,,true
+P002,Temperature,38.1,°C,,,true
+P002,Temperature,38.3,°C,,,true
+P002,Temperature,38.5,°C,,,true
+P002,Temperature,38.8,°C,,,true
+P002,Temperature,39.0,°C,,,true
+P002,Temperature,39.5,°C,,,true
+P002,Temperature,40.0,°C,,,true
+P002,Temperature,40.5,°C,,,true
+P002,Temperature,41.0,°C,,,true

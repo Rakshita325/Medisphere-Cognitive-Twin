@@ -6,6 +6,8 @@ import com.medisphere.medispherebackend.model.VitalRecord;
 import com.medisphere.medispherebackend.repository.VitalRecordRepository;
 import com.medisphere.medispherebackend.service.AlertService;
 import com.medisphere.medispherebackend.service.AnomalyDetectionService;
+import com.medisphere.medispherebackend.service.ClinicalRuleEngine;
+import com.medisphere.medispherebackend.service.ClinicalRuleResult;
 import com.medisphere.medispherebackend.service.PatientDataFhirService;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Observation;
@@ -14,6 +16,7 @@ import org.hl7.fhir.r4.model.Quantity;
 import org.hl7.fhir.r4.model.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
@@ -29,7 +32,23 @@ public class VitalConsumer {
     private final VitalRecordRepository vitalRecordRepository;
     private final IGenericClient fhirClient;
     private final AnomalyDetectionService anomalyDetectionService;
+    private final ClinicalRuleEngine clinicalRuleEngine;
     private final AlertService alertService;
+
+    @Autowired
+    public VitalConsumer(
+            VitalRecordRepository vitalRecordRepository,
+            IGenericClient fhirClient,
+            AnomalyDetectionService anomalyDetectionService,
+            ClinicalRuleEngine clinicalRuleEngine,
+            AlertService alertService) {
+
+        this.vitalRecordRepository = vitalRecordRepository;
+        this.fhirClient = fhirClient;
+        this.anomalyDetectionService = anomalyDetectionService;
+        this.clinicalRuleEngine = clinicalRuleEngine;
+        this.alertService = alertService;
+    }
 
     public VitalConsumer(
             VitalRecordRepository vitalRecordRepository,
@@ -37,13 +56,10 @@ public class VitalConsumer {
             AnomalyDetectionService anomalyDetectionService,
             AlertService alertService) {
 
-        this.vitalRecordRepository = vitalRecordRepository;
-        this.fhirClient = fhirClient;
-        this.anomalyDetectionService = anomalyDetectionService;
-        this.alertService = alertService;
+        this(vitalRecordRepository, fhirClient, anomalyDetectionService, new ClinicalRuleEngine(), alertService);
     }
 
-    @KafkaListener(topics = "patient-vitals", groupId = "medisphere-vitals")
+    @KafkaListener(topics = "patient-vitals", groupId = "${spring.kafka.consumer.group-id:medisphere-vitals}")
     public void consumeVitalData(VitalData vitalData) {
 
         try {
@@ -75,8 +91,21 @@ public class VitalConsumer {
                         vitalData.getType(),
                         getDisplayValue(vitalData));
 
-                // Part 3: Create alert for detected anomaly
-                alertService.createAlert(vitalData);
+                // Part 4: Clinical Rule Engine Evaluation
+                ClinicalRuleResult ruleResult = clinicalRuleEngine.evaluate(vitalData);
+
+                if (ruleResult.isRuleTriggered()) {
+                    logger.warn(
+                            "CLINICAL RULE TRIGGERED | Patient: {} | Vital: {} | Severity: {} | Action: {} | Rule: {}",
+                            vitalData.getPatientId(),
+                            vitalData.getType(),
+                            ruleResult.getSeverity(),
+                            ruleResult.getRecommendedAction(),
+                            ruleResult.getRuleType());
+                }
+
+                // Part 3: Create alert for detected anomaly with clinical rule evaluation
+                alertService.createAlert(vitalData, ruleResult);
 
             } else {
 

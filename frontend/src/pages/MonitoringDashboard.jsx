@@ -212,17 +212,30 @@ export default function MonitoringDashboard() {
   const fetchVitals = useCallback(async () => {
     try {
       const records = await getLatestVitals(selectedPatient.id);
+
       if (!Array.isArray(records) || records.length === 0) return;
 
-      // Group by type to get latest of each
+      // Group by type and explicitly select the newest record
       const latestByType = {};
       const trendRecords = [];
+
+      const getRecordTimestamp = (r) => {
+        if (!r) return -Infinity;
+        const raw = r.createdAt || r.recordedAt;
+        if (!raw) return -Infinity;
+        const t = new Date(raw).getTime();
+        return isNaN(t) ? -Infinity : t;
+      };
 
       for (const rec of records) {
         const type = rec.type;
         if (!type) continue;
 
-        if (!latestByType[type]) {
+        const recTimestamp = getRecordTimestamp(rec);
+        const existingTimestamp = getRecordTimestamp(latestByType[type]);
+
+        // Keep the newest record for each vital type (or first available)
+        if (!latestByType[type] || recTimestamp > existingTimestamp) {
           latestByType[type] = rec;
         }
 
@@ -233,18 +246,34 @@ export default function MonitoringDashboard() {
       }
 
       setVitals(latestByType);
-      setTrendData(trendRecords.reverse()); // oldest first for chart
 
-      // Update last data time
-      const newest = records[0];
-      if (newest?.createdAt || newest?.recordedAt) {
-        setLastDataTime(newest.createdAt || newest.recordedAt);
+      // Sort trend data from oldest → newest
+      trendRecords.sort((a, b) => {
+        const timeA = getRecordTimestamp(a);
+        const timeB = getRecordTimestamp(b);
+        return timeA - timeB;
+      });
+
+      setTrendData(trendRecords);
+
+      // Find the newest record across all vital types
+      const newestRecord = records.reduce((latest, rec) => {
+        const recTime = getRecordTimestamp(rec);
+        const latestTime = getRecordTimestamp(latest);
+        return recTime > latestTime ? rec : latest;
+      }, null);
+
+      if (newestRecord) {
+        setLastDataTime(
+          newestRecord.createdAt ||
+          newestRecord.recordedAt
+        );
       }
+
     } catch (err) {
       console.error('Failed to fetch vitals:', err);
     }
   }, [selectedPatient.id, trendType]);
-
   // ─── Fetch active alerts ───
   const fetchAlerts = useCallback(async () => {
     try {
@@ -493,6 +522,8 @@ export default function MonitoringDashboard() {
                   <th>Vital</th>
                   <th>Value</th>
                   <th>Message</th>
+                  <th>Assigned To</th>
+                  <th>Notification</th>
                   <th>Time</th>
                   <th>Status</th>
                   <th>Action</th>
@@ -514,6 +545,8 @@ export default function MonitoringDashboard() {
                       {alert.value} {alert.unit}
                     </td>
                     <td className="alert-message">{alert.message}</td>
+                    <td>{alert.assignedDoctorRole || '—'}</td>
+                    <td>{alert.notificationStatus || '—'}</td>
                     <td className="alert-time">{formatDateTime(alert.detectedAt)}</td>
                     <td>
                       <span className={`alert-status-badge ${alert.status === 'ACTIVE' ? 'status-active' : 'status-ack'}`}>

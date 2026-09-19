@@ -25,6 +25,11 @@ public class Alert {
     private Instant detectedAt;
 
     private String status;
+    private String recommendedAction;
+    private String ruleType;
+    
+    private String assignedDoctorRole;
+    private String notificationStatus;
 
     public Alert() {
     }
@@ -48,6 +53,60 @@ public class Alert {
         this.message = message;
         this.detectedAt = detectedAt;
         this.status = status;
+    }
+
+    public Alert(
+            String patientId,
+            String patientName,
+            String vitalType,
+            Double value,
+            String unit,
+            String severity,
+            String message,
+            Instant detectedAt,
+            String status,
+            String recommendedAction,
+            String ruleType) {
+        this.patientId = patientId;
+        this.patientName = patientName;
+        this.vitalType = vitalType;
+        this.value = value;
+        this.unit = unit;
+        this.severity = severity;
+        this.message = message;
+        this.detectedAt = detectedAt;
+        this.status = status;
+        this.recommendedAction = recommendedAction;
+        this.ruleType = ruleType;
+    }
+
+    public Alert(
+            String patientId,
+            String patientName,
+            String vitalType,
+            Double value,
+            String unit,
+            String severity,
+            String message,
+            Instant detectedAt,
+            String status,
+            String recommendedAction,
+            String ruleType,
+            String assignedDoctorRole,
+            String notificationStatus) {
+        this.patientId = patientId;
+        this.patientName = patientName;
+        this.vitalType = vitalType;
+        this.value = value;
+        this.unit = unit;
+        this.severity = severity;
+        this.message = message;
+        this.detectedAt = detectedAt;
+        this.status = status;
+        this.recommendedAction = recommendedAction;
+        this.ruleType = ruleType;
+        this.assignedDoctorRole = assignedDoctorRole;
+        this.notificationStatus = notificationStatus;
     }
 
     public String getId() {
@@ -128,5 +187,37 @@ public class Alert {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getRecommendedAction() {
+        return recommendedAction;
+    }
+
+    public void setRecommendedAction(String recommendedAction) {
+        this.recommendedAction = recommendedAction;
+    }
+
+    public String getRuleType() {
+        return ruleType;
+    }
+
+    public void setRuleType(String ruleType) {
+        this.ruleType = ruleType;
+    }
+
+    public String getAssignedDoctorRole() {
+        return assignedDoctorRole;
+    }
+
+    public void setAssignedDoctorRole(String assignedDoctorRole) {
+        this.assignedDoctorRole = assignedDoctorRole;
+    }
+
+    public String getNotificationStatus() {
+        return notificationStatus;
+    }
+
+    public void setNotificationStatus(String notificationStatus) {
+        this.notificationStatus = notificationStatus;
     }
 }

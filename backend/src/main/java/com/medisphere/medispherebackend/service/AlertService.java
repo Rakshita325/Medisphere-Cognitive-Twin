@@ -3,6 +3,7 @@ package com.medisphere.medispherebackend.service;
 import com.medisphere.medispherebackend.kafka.VitalData;
 import com.medisphere.medispherebackend.model.Alert;
 import com.medisphere.medispherebackend.repository.AlertRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,19 +16,40 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ClinicalRuleEngine clinicalRuleEngine;
+
+    @Autowired
+    public AlertService(
+            AlertRepository alertRepository,
+            SimpMessagingTemplate messagingTemplate,
+            ClinicalRuleEngine clinicalRuleEngine) {
+
+        this.alertRepository = alertRepository;
+        this.messagingTemplate = messagingTemplate;
+        this.clinicalRuleEngine = clinicalRuleEngine;
+    }
 
     public AlertService(
             AlertRepository alertRepository,
             SimpMessagingTemplate messagingTemplate) {
 
-        this.alertRepository = alertRepository;
-        this.messagingTemplate = messagingTemplate;
+        this(alertRepository, messagingTemplate, new ClinicalRuleEngine());
     }
 
     /**
-     * Creates an alert for an abnormal vital.
+     * Creates an alert for an abnormal vital by evaluating against clinical rules.
      */
     public Optional<Alert> createAlert(VitalData vitalData) {
+        ClinicalRuleResult ruleResult = clinicalRuleEngine != null
+                ? clinicalRuleEngine.evaluate(vitalData)
+                : ClinicalRuleResult.notTriggered();
+        return createAlert(vitalData, ruleResult);
+    }
+
+    /**
+     * Creates an alert for an abnormal vital using the provided clinical rule evaluation.
+     */
+    public Optional<Alert> createAlert(VitalData vitalData, ClinicalRuleResult ruleResult) {
 
         if (vitalData == null || vitalData.getType() == null) {
             return Optional.empty();
@@ -60,8 +82,25 @@ public class AlertService {
 
         Double value = getVitalValue(vitalData);
         String unit = getUnit(vitalData);
-        String severity = determineSeverity(vitalData);
-        String message = createMessage(vitalData, value, unit);
+
+        String severity = (ruleResult != null && ruleResult.isRuleTriggered() && ruleResult.getSeverity() != null)
+                ? ruleResult.getSeverity()
+                : determineSeverity(vitalData);
+
+        String message = (ruleResult != null && ruleResult.isRuleTriggered() && ruleResult.getMessage() != null)
+                ? ruleResult.getMessage()
+                : createMessage(vitalData, value, unit);
+
+        String recommendedAction = (ruleResult != null && ruleResult.isRuleTriggered())
+                ? ruleResult.getRecommendedAction()
+                : null;
+
+        String ruleType = (ruleResult != null && ruleResult.isRuleTriggered())
+                ? ruleResult.getRuleType()
+                : null;
+                
+        String assignedDoctorRole = determineAssignedRole(vitalType);
+        String notificationStatus = "NOTIFIED";
 
         Alert alert = new Alert(
                 patientId,
@@ -72,7 +111,11 @@ public class AlertService {
                 severity,
                 message,
                 Instant.now(),
-                "ACTIVE");
+                "ACTIVE",
+                recommendedAction,
+                ruleType,
+                assignedDoctorRole,
+                notificationStatus);
 
         Alert savedAlert = alertRepository.save(alert);
 
@@ -91,9 +134,28 @@ public class AlertService {
                         + " "
                         + savedAlert.getUnit()
                         + " | Severity: "
-                        + savedAlert.getSeverity());
+                        + savedAlert.getSeverity()
+                        + " | Action: "
+                        + savedAlert.getRecommendedAction()
+                        + " | Assigned: "
+                        + savedAlert.getAssignedDoctorRole());
 
         return Optional.of(savedAlert);
+    }
+    
+    /**
+     * Determines the assigned doctor role based on vital type.
+     */
+    private String determineAssignedRole(String vitalType) {
+        if (vitalType == null) {
+            return "GENERAL_PHYSICIAN";
+        }
+        if (vitalType.equalsIgnoreCase("Heart Rate") || 
+            vitalType.equalsIgnoreCase("SpO2") || 
+            vitalType.equalsIgnoreCase("Blood Pressure")) {
+            return "CARDIOLOGIST";
+        }
+        return "GENERAL_PHYSICIAN";
     }
 
     /**
@@ -149,6 +211,9 @@ public class AlertService {
         String value = vitalData.getValue();
 
         if (value == null || value.isBlank()) {
+            if ("Blood Pressure".equalsIgnoreCase(vitalData.getType()) && vitalData.getSystolicBP() != null) {
+                return vitalData.getSystolicBP();
+            }
             return null;
         }
 

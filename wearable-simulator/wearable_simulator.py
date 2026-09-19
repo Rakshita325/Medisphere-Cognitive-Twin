@@ -36,8 +36,9 @@ def generate_heart_rate():
 
 
 def generate_spo2():
+    if random.random() < 0.15:
+        return random.randint(85, 91)
     return random.randint(97, 100)
-
 
 def generate_blood_pressure():
     systolic = random.randint(115, 130)

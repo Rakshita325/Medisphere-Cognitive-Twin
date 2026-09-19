@@ -5,12 +5,16 @@ import com.medisphere.medispherebackend.model.VitalRecord;
 import com.medisphere.medispherebackend.repository.VitalRecordRepository;
 import com.medisphere.medispherebackend.service.AlertService;
 import com.medisphere.medispherebackend.service.AnomalyDetectionService;
+import com.medisphere.medispherebackend.service.ClinicalRuleEngine;
+import com.medisphere.medispherebackend.service.ClinicalRuleResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,6 +31,9 @@ class VitalConsumerTest {
     private AnomalyDetectionService anomalyDetectionService;
 
     @Mock
+    private ClinicalRuleEngine clinicalRuleEngine;
+
+    @Mock
     private AlertService alertService;
 
     private VitalConsumer vitalConsumer;
@@ -37,6 +44,7 @@ class VitalConsumerTest {
                 vitalRecordRepository,
                 fhirClient,
                 anomalyDetectionService,
+                clinicalRuleEngine,
                 alertService);
     }
 
@@ -55,11 +63,11 @@ class VitalConsumerTest {
 
         vitalConsumer.consumeVitalData(vitalData);
 
-        verify(vitalRecordRepository).save(org.mockito.ArgumentMatchers.any(VitalRecord.class));
+        verify(vitalRecordRepository).save(any(VitalRecord.class));
     }
 
     @Test
-    void shouldProcessAnomalousVitalAndCreateAlert() {
+    void shouldProcessAnomalousVitalAndEvaluateClinicalRulesAndCreateAlert() {
         VitalData vitalData = new VitalData();
 
         vitalData.setPatientId("P001");
@@ -68,12 +76,21 @@ class VitalConsumerTest {
         vitalData.setUnit("%");
         vitalData.setRecordedAt("2026-09-18T10:00:00Z");
 
+        ClinicalRuleResult ruleResult = ClinicalRuleResult.triggered(
+                "CRITICAL",
+                "Low oxygen saturation detected.",
+                "Immediate clinical review recommended",
+                "SPO2_CRITICAL");
+
         when(anomalyDetectionService.isAnomaly(vitalData))
                 .thenReturn(true);
+        when(clinicalRuleEngine.evaluate(vitalData))
+                .thenReturn(ruleResult);
 
         vitalConsumer.consumeVitalData(vitalData);
 
-        verify(vitalRecordRepository).save(org.mockito.ArgumentMatchers.any(VitalRecord.class));
-        verify(alertService).createAlert(vitalData);
+        verify(vitalRecordRepository).save(any(VitalRecord.class));
+        verify(clinicalRuleEngine).evaluate(vitalData);
+        verify(alertService).createAlert(eq(vitalData), eq(ruleResult));
     }
 }
