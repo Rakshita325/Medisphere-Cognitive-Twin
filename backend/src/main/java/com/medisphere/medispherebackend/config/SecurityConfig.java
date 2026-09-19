@@ -38,6 +38,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/vitals/**")
                         .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
 
+                        // Alert APIs (Milestone 3)
+                        .requestMatchers("/api/alerts/**")
+                        .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+
+                        // Vital Record APIs (Milestone 3)
+                        .requestMatchers("/api/vital-records/**")
+                        .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+
                         // Admin APIs
                         .requestMatchers("/api/admin/**")
                         .hasRole("ADMIN")

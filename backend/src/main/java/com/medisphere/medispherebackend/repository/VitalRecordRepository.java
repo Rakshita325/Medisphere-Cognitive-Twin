@@ -8,4 +8,6 @@ import java.util.List;
 public interface VitalRecordRepository extends MongoRepository<VitalRecord, String> {
 
     List<VitalRecord> findByPatientId(String patientId);
+
+    List<VitalRecord> findTop50ByPatientIdOrderByCreatedAtDesc(String patientId);
 }

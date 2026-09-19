@@ -38,7 +38,7 @@ const sidebarSections = [
   {
     label: 'MONITORING',
     items: [
-      { to: '/alerts', label: 'Alerts', icon: Bell, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
+      { to: '/alerts', label: 'Patient Monitoring', icon: Bell, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
     ],
   },
   {

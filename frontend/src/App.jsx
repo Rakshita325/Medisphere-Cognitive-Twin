@@ -15,6 +15,7 @@ import ShapExplainabilityPage from './pages/ShapExplainabilityPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ModelInfoPage from './pages/ModelInfoPage';
 import PlaceholderPage from './pages/PlaceholderPage';
+import MonitoringDashboard from './pages/MonitoringDashboard';
 
 import {
   TrendingUp,
@@ -95,11 +96,7 @@ function AuthenticatedLayout() {
             } />
             <Route path="/alerts" element={
               <ProtectedRoute>
-                <PlaceholderPage
-                  title="Alerts"
-                  description="Real-time clinical alerts and notifications"
-                  icon={Bell}
-                />
+                <MonitoringDashboard />
               </ProtectedRoute>
             } />
             <Route path="/care-plans" element={

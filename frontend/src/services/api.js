@@ -329,3 +329,42 @@ export async function predictDiabetes(features) {
 export async function getModelMetadata(modelName) {
   return await request(`/api/ml/models/${encodeURIComponent(modelName)}`);
 }
+
+// ============================================================
+// Milestone 3 — Monitoring Dashboard API
+// ============================================================
+
+/**
+ * Fetch all active alerts (status = ACTIVE), newest first.
+ * GET /api/alerts/active
+ */
+export async function getActiveAlerts() {
+  return await request('/api/alerts/active');
+}
+
+/**
+ * Fetch alerts for a specific patient.
+ * GET /api/alerts/patient/{patientId}
+ */
+export async function getPatientAlerts(patientId) {
+  return await request(`/api/alerts/patient/${encodeURIComponent(patientId)}`);
+}
+
+/**
+ * Acknowledge an alert by ID.
+ * PUT /api/alerts/{id}/acknowledge
+ */
+export async function acknowledgeAlert(alertId) {
+  return await request(`/api/alerts/${encodeURIComponent(alertId)}/acknowledge`, {
+    method: 'PUT',
+  });
+}
+
+/**
+ * Fetch the latest vital records for a patient (up to 50).
+ * GET /api/vital-records/{patientId}/latest
+ */
+export async function getLatestVitals(patientId) {
+  return await request(`/api/vital-records/${encodeURIComponent(patientId)}/latest`);
+}
+
