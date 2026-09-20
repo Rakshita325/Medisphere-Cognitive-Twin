@@ -13,4 +13,9 @@ public class KafkaConfig {
     public NewTopic vitalTopic() {
         return new NewTopic("patient-vitals", 1, (short) 1);
     }
+
+    @Bean
+    public NewTopic consentTopic() {
+        return new NewTopic("consent-events", 1, (short) 1);
+    }
 }

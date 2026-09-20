@@ -9,10 +9,7 @@ import org.springframework.stereotype.Service;
 @ConditionalOnProperty(name = "medisphere.kafka.enabled", havingValue = "true")
 public class ConsentKafkaConsumer {
 
-    @KafkaListener(
-            topics = "consent-events",
-            groupId = "medisphere-consent"
-    )
+    @KafkaListener(topics = "consent-events", groupId = "medisphere-consent", containerFactory = "consentKafkaListenerContainerFactory")
     public void consumeConsentEvent(Consent consent) {
 
         System.out.println("===== CONSENT EVENT RECEIVED =====");
