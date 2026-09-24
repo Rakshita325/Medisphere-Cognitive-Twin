@@ -172,81 +172,86 @@ public class VitalConsumer {
     }
 
     private void createFhirObservation(VitalData vitalData) {
+        try {
+            Bundle bundle = fhirClient.search()
+                    .forResource(Patient.class)
+                    .where(
+                            Patient.IDENTIFIER.exactly()
+                                    .systemAndCode(
+                                            PatientDataFhirService.IDENTIFIER_SYSTEM,
+                                            vitalData.getPatientId()))
+                    .returnBundle(Bundle.class)
+                    .execute();
 
-        Bundle bundle = fhirClient.search()
-                .forResource(Patient.class)
-                .where(
-                        Patient.IDENTIFIER.exactly()
-                                .systemAndCode(
-                                        PatientDataFhirService.IDENTIFIER_SYSTEM,
-                                        vitalData.getPatientId()))
-                .returnBundle(Bundle.class)
-                .execute();
+            if (!bundle.hasEntry()
+                    || !(bundle.getEntryFirstRep().getResource() instanceof Patient patient)) {
 
-        if (!bundle.hasEntry()
-                || !(bundle.getEntryFirstRep().getResource() instanceof Patient patient)) {
+                logger.warn(
+                        "FHIR patient not found for vital event: {}",
+                        vitalData.getPatientId());
 
-            logger.warn(
-                    "FHIR patient not found for vital event: {}",
-                    vitalData.getPatientId());
+                return;
+            }
 
-            return;
+            Observation observation = new Observation();
+
+            observation.setStatus(
+                    Observation.ObservationStatus.FINAL);
+
+            observation.setSubject(
+                    new Reference(
+                            "Patient/"
+                                    + patient.getIdElement()
+                                            .getIdPart()));
+
+            String type = vitalData.getType();
+
+            observation.getCode()
+                    .addCoding()
+                    .setSystem("http://loinc.org")
+                    .setCode(codeFor(type))
+                    .setDisplay(type);
+
+            observation.getCode().setText(type);
+
+            if (vitalData.getRecordedAt() != null
+                    && !vitalData.getRecordedAt().isBlank()) {
+
+                observation.setEffective(
+                        new org.hl7.fhir.r4.model.DateTimeType(
+                                vitalData.getRecordedAt()));
+            }
+
+            if ("Blood Pressure".equalsIgnoreCase(type)) {
+
+                addComponent(
+                        observation,
+                        "8480-6",
+                        vitalData.getSystolicBP());
+
+                addComponent(
+                        observation,
+                        "8462-4",
+                        vitalData.getDiastolicBP());
+
+            } else {
+
+                observation.setValue(
+                        new Quantity()
+                                .setValue(
+                                        Double.parseDouble(
+                                                vitalData.getValue()))
+                                .setUnit(vitalData.getUnit()));
+            }
+
+            fhirClient.create()
+                    .resource(observation)
+                    .execute();
+        } catch (Exception e) {
+            logger.warn("Could not sync vital to FHIR server for patient {}: {}",
+                    vitalData != null ? vitalData.getPatientId() : "unknown",
+                    e.getMessage());
         }
-
-        Observation observation = new Observation();
-
-        observation.setStatus(
-                Observation.ObservationStatus.FINAL);
-
-        observation.setSubject(
-                new Reference(
-                        "Patient/"
-                                + patient.getIdElement()
-                                        .getIdPart()));
-
-        String type = vitalData.getType();
-
-        observation.getCode()
-                .addCoding()
-                .setSystem("http://loinc.org")
-                .setCode(codeFor(type))
-                .setDisplay(type);
-
-        observation.getCode().setText(type);
-
-        if (vitalData.getRecordedAt() != null
-                && !vitalData.getRecordedAt().isBlank()) {
-
-            observation.setEffective(
-                    new org.hl7.fhir.r4.model.DateTimeType(
-                            vitalData.getRecordedAt()));
-        }
-
-        if ("Blood Pressure".equalsIgnoreCase(type)) {
-
-            addComponent(
-                    observation,
-                    "8480-6",
-                    vitalData.getSystolicBP());
-
-            addComponent(
-                    observation,
-                    "8462-4",
-                    vitalData.getDiastolicBP());
-
-        } else {
-
-            observation.setValue(
-                    new Quantity()
-                            .setValue(
-                                    Double.parseDouble(
-                                            vitalData.getValue()))
-                            .setUnit(vitalData.getUnit()));
-        }
-
-        fhirClient.create()
-                .resource(observation)
-                .execute();
     }
 
     private void addComponent(

@@ -18,6 +18,9 @@ import java.util.Map;
 @ConditionalOnProperty(name = "medisphere.kafka.enabled", havingValue = "true")
 public class KafkaConsumerConfig {
 
+    @org.springframework.beans.factory.annotation.Value("${spring.kafka.bootstrap-servers:localhost:9092}")
+    private String bootstrapServers;
+
     @Bean
     public ConsumerFactory<String, Consent> consentConsumerFactory() {
 
@@ -25,7 +28,7 @@ public class KafkaConsumerConfig {
 
         props.put(
                 ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                "localhost:9092");
+                bootstrapServers);
 
         props.put(
                 ConsumerConfig.GROUP_ID_CONFIG,

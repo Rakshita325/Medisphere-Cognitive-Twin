@@ -3,6 +3,7 @@ package com.medisphere.medispherebackend.controller;
 import com.medisphere.medispherebackend.kafka.ConsentKafkaProducer;
 import com.medisphere.medispherebackend.model.Consent;
 import com.medisphere.medispherebackend.repository.ConsentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -14,7 +15,7 @@ public class ConsentController {
 
     public ConsentController(
             ConsentRepository consentRepository,
-            ConsentKafkaProducer consentKafkaProducer) {
+            @Autowired(required = false) ConsentKafkaProducer consentKafkaProducer) {
 
         this.consentRepository = consentRepository;
         this.consentKafkaProducer = consentKafkaProducer;
@@ -28,8 +29,10 @@ public class ConsentController {
 
         Consent savedConsent = consentRepository.save(consent);
 
-        // Send consent event to Kafka
-        consentKafkaProducer.sendConsentEvent(savedConsent);
+        // Send consent event to Kafka (if Kafka is enabled)
+        if (consentKafkaProducer != null) {
+            consentKafkaProducer.sendConsentEvent(savedConsent);
+        }
 
         return savedConsent;
     }
@@ -46,8 +49,10 @@ public class ConsentController {
 
         Consent savedConsent = consentRepository.save(consent);
 
-        // Send consent revoked event to Kafka
-        consentKafkaProducer.sendConsentEvent(savedConsent);
+        // Send consent revoked event to Kafka (if Kafka is enabled)
+        if (consentKafkaProducer != null) {
+            consentKafkaProducer.sendConsentEvent(savedConsent);
+        }
 
         return "Consent revoked successfully for patient: " + patientId;
     }
@@ -60,4 +65,4 @@ public class ConsentController {
             .findFirst()
             .orElseThrow(() -> new RuntimeException("Consent not found"));
     }
-}
+}
