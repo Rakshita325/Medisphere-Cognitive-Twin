@@ -3,7 +3,7 @@ package com.medisphere.medispherebackend.dto;
 public class VitalData {
 
     private String type;
-    private String value;
+    private Double value;
     private String unit;
     private String recordedAt;
 
@@ -21,11 +21,11 @@ public class VitalData {
         this.type = type;
     }
 
-    public String getValue() {
+    public Double getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 

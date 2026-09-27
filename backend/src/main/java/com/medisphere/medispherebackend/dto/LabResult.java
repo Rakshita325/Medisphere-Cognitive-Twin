@@ -3,7 +3,7 @@ package com.medisphere.medispherebackend.dto;
 public class LabResult {
 
     private String test;
-    private String value;
+    private Double value;
     private String unit;
     private String referenceRange;
     private String date;
@@ -20,11 +20,11 @@ public class LabResult {
         this.test = test;
     }
 
-    public String getValue() {
+    public Double getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(Double value) {
         this.value = value;
     }
 

@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Bell,
   ClipboardList,
+  CheckSquare,
   FileBarChart,
   Cpu
 } from 'lucide-react';
@@ -45,6 +46,7 @@ const sidebarSections = [
     label: 'CLINICAL',
     items: [
       { to: '/care-plans', label: 'Care Plans', icon: ClipboardList, roles: ['ADMIN', 'DOCTOR'] },
+      { to: '/treatment-tracking', label: 'Treatment Tracking', icon: CheckSquare, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
       { to: '/reports', label: 'Reports', icon: FileBarChart, roles: ['ADMIN', 'DOCTOR'] },
     ],
   },

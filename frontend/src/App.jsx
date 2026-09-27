@@ -16,6 +16,8 @@ import AnalyticsPage from './pages/AnalyticsPage';
 import ModelInfoPage from './pages/ModelInfoPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import MonitoringDashboard from './pages/MonitoringDashboard';
+import CarePlansPage from './pages/CarePlansPage';
+import TreatmentTrackingPage from './pages/TreatmentTrackingPage';
 
 import {
   TrendingUp,
@@ -101,11 +103,12 @@ function AuthenticatedLayout() {
             } />
             <Route path="/care-plans" element={
               <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
-                <PlaceholderPage
-                  title="Care Plans"
-                  description="Patient care plan management and tracking"
-                  icon={ClipboardList}
-                />
+                <CarePlansPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/treatment-tracking" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR', 'NURSE']}>
+                <TreatmentTrackingPage />
               </ProtectedRoute>
             } />
             <Route path="/reports" element={

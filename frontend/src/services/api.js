@@ -224,6 +224,23 @@ export async function getFhirPatients() {
 }
 
 /**
+ * Fetch rich patient health data by patientId (P001-P010) from patient-data.json.
+ * Returns conditions, vitals, labResults, wearableData, etc.
+ * GET /api/patient-data/{patientId}
+ */
+export async function getPatientHealthData(patientId) {
+  return await request(`/api/patient-data/${encodeURIComponent(patientId)}`);
+}
+
+/**
+ * Fetch all rich patient records from patient-data.json.
+ * GET /api/patient-data
+ */
+export async function getAllPatientData() {
+  return await request('/api/patient-data');
+}
+
+/**
  * Fetch all ML demo patients (Milestone 2 synthetic patients for risk prediction)
  * Returns ML001-ML005 with pre-computed feature values for CVD and Diabetes models
  */
@@ -367,4 +384,183 @@ export async function acknowledgeAlert(alertId) {
 export async function getLatestVitals(patientId) {
   return await request(`/api/vital-records/${encodeURIComponent(patientId)}/latest`);
 }
+
+// ============================================================
+// Milestone 4 — Care Plan API
+// ============================================================
+
+/**
+ * Generate/create a new Care Plan for a patient.
+ * POST /api/care-plans/generate
+ */
+export async function generateCarePlan(data) {
+  return await request('/api/care-plans/generate', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Fetch all Care Plans for a patient.
+ * GET /api/care-plans/patient/{patientId}
+ */
+export async function getPatientCarePlans(patientId) {
+  try {
+    return await request(`/api/care-plans/patient/${encodeURIComponent(patientId)}`);
+  } catch (err) {
+    try {
+      return await request(`/api/careplans/patient/${encodeURIComponent(patientId)}`);
+    } catch {
+      throw err;
+    }
+  }
+}
+
+/**
+ * Fetch the latest Care Plan for a patient.
+ * GET /api/care-plans/patient/{patientId}/latest
+ */
+export async function getLatestPatientCarePlan(patientId) {
+  try {
+    return await request(`/api/care-plans/patient/${encodeURIComponent(patientId)}/latest`);
+  } catch (err) {
+    try {
+      return await request(`/api/careplans/patient/${encodeURIComponent(patientId)}/latest`);
+    } catch {
+      throw err;
+    }
+  }
+}
+
+/**
+ * Fetch all Care Plans.
+ * GET /api/care-plans
+ */
+export async function getAllCarePlans() {
+  return await request('/api/care-plans');
+}
+
+/**
+ * Update a Care Plan by ID.
+ * PUT /api/care-plans/{id}
+ */
+export async function updateCarePlan(id, carePlan) {
+  return await request(`/api/care-plans/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(carePlan),
+  });
+}
+
+/**
+ * Change Care Plan Status (DRAFT, PENDING_APPROVAL, APPROVED, ACTIVE, COMPLETED).
+ * PATCH /api/care-plans/{id}/status
+ */
+export async function updateCarePlanStatus(id, status) {
+  return await request(`/api/care-plans/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+}
+
+// ============================================================
+// Milestone 4 Part 2 — Treatment Tracking & Adherence API
+// ============================================================
+
+/**
+ * Create a single treatment tracking intervention record.
+ * POST /api/treatment-tracking
+ */
+export async function createTreatmentTracking(data) {
+  return await request('/api/treatment-tracking', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Create multiple treatment tracking interventions in batch.
+ * POST /api/treatment-tracking/batch
+ */
+export async function createTreatmentTrackingBatch(items) {
+  return await request('/api/treatment-tracking/batch', {
+    method: 'POST',
+    body: JSON.stringify(items),
+  });
+}
+
+/**
+ * Fetch all treatment tracking records for a specific patient.
+ * GET /api/treatment-tracking/patient/{patientId}
+ */
+export async function getPatientTreatmentTracking(patientId) {
+  return await request(`/api/treatment-tracking/patient/${encodeURIComponent(patientId)}`);
+}
+
+/**
+ * Fetch all treatment tracking records for a specific Care Plan.
+ * GET /api/treatment-tracking/careplan/{carePlanId}
+ */
+export async function getCarePlanTreatmentTracking(carePlanId) {
+  return await request(`/api/treatment-tracking/careplan/${encodeURIComponent(carePlanId)}`);
+}
+
+/**
+ * Fetch a single treatment tracking record by ID.
+ * GET /api/treatment-tracking/{id}
+ */
+export async function getTreatmentTrackingById(id) {
+  return await request(`/api/treatment-tracking/${encodeURIComponent(id)}`);
+}
+
+/**
+ * Update the status of an intervention (PENDING, IN_PROGRESS, COMPLETED, MISSED, CANCELLED).
+ * PUT /api/treatment-tracking/{id}/status
+ */
+export async function updateTreatmentStatus(id, { status, notes, completedAt } = {}) {
+  return await request(`/api/treatment-tracking/${encodeURIComponent(id)}/status`, {
+    method: 'PUT',
+    body: JSON.stringify({ status, notes, completedAt }),
+  });
+}
+
+/**
+ * Update entire treatment tracking record.
+ * PUT /api/treatment-tracking/{id}
+ */
+export async function updateTreatmentTracking(id, data) {
+  return await request(`/api/treatment-tracking/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Delete a treatment tracking record.
+ * DELETE /api/treatment-tracking/{id}
+ */
+export async function deleteTreatmentTracking(id) {
+  return await request(`/api/treatment-tracking/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
+ * Fetch calculated treatment adherence analytics for a patient.
+ * GET /api/treatment-tracking/patient/{patientId}/adherence
+ */
+export async function getPatientAdherence(patientId) {
+  return await request(`/api/treatment-tracking/patient/${encodeURIComponent(patientId)}/adherence`);
+}
+
+/**
+ * Initialize tracking records from an existing Care Plan.
+ * POST /api/treatment-tracking/careplan/{carePlanId}/initialize
+ */
+export async function initializeCarePlanTracking(carePlanId) {
+  return await request(`/api/treatment-tracking/careplan/${encodeURIComponent(carePlanId)}/initialize`, {
+    method: 'POST',
+  });
+}
+
+
 

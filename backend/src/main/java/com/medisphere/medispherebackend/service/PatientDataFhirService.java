@@ -164,8 +164,8 @@ public class PatientDataFhirService {
         if ("Blood Pressure".equalsIgnoreCase(type)) {
             addComponent(observation, "8480-6", "Systolic blood pressure", vital.getSystolic());
             addComponent(observation, "8462-4", "Diastolic blood pressure", vital.getDiastolic());
-        } else if (!isBlank(vital.getValue())) {
-            observation.setValue(new Quantity().setValue(Double.parseDouble(vital.getValue())).setUnit(vital.getUnit()));
+        } else if (vital.getValue() != null) {
+            observation.setValue(new Quantity().setValue(vital.getValue()).setUnit(vital.getUnit()));
         }
         return observation;
     }
@@ -176,7 +176,7 @@ public class PatientDataFhirService {
         observation.setSubject(new Reference(subject));
         observation.getCode().addCoding().setSystem("http://loinc.org").setCode(labCode(lab.getTest())).setDisplay(lab.getTest());
         observation.getCode().setText(lab.getTest());
-        if (!isBlank(lab.getValue())) observation.setValue(new Quantity().setValue(Double.parseDouble(lab.getValue())).setUnit(lab.getUnit()));
+        if (lab.getValue() != null) observation.setValue(new Quantity().setValue(lab.getValue()).setUnit(lab.getUnit()));
         if (!isBlank(lab.getReferenceRange())) observation.getReferenceRangeFirstRep().setText(lab.getReferenceRange());
         setEffective(observation, !isBlank(lab.getRecordedAt()) ? lab.getRecordedAt() : lab.getDate());
         return observation;

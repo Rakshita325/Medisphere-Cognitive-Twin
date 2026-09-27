@@ -59,7 +59,7 @@ public class VitalConsumer {
         this(vitalRecordRepository, fhirClient, anomalyDetectionService, new ClinicalRuleEngine(), alertService);
     }
 
-    @KafkaListener(topics = "patient-vitals", groupId = "${spring.kafka.consumer.group-id:medisphere-vitals}")
+    @KafkaListener(topics = "patient-vitals", groupId = "${spring.kafka.consumer.group-id:medisphere-vitals-live}", containerFactory = "vitalKafkaListenerContainerFactory")
     public void consumeVitalData(VitalData vitalData) {
 
         try {
@@ -234,14 +234,17 @@ public class VitalConsumer {
                         "8462-4",
                         vitalData.getDiastolicBP());
 
-            } else {
-
-                observation.setValue(
-                        new Quantity()
-                                .setValue(
-                                        Double.parseDouble(
-                                                vitalData.getValue()))
-                                .setUnit(vitalData.getUnit()));
+            } else if (vitalData.getValue() != null && !vitalData.getValue().isBlank()) {
+                try {
+                    observation.setValue(
+                            new Quantity()
+                                    .setValue(
+                                            Double.parseDouble(
+                                                    vitalData.getValue().trim()))
+                                    .setUnit(vitalData.getUnit()));
+                } catch (NumberFormatException nfe) {
+                    logger.warn("Could not parse numeric value for vital type {}: {}", type, vitalData.getValue());
+                }
             }
 
             fhirClient.create()
