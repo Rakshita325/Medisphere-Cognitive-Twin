@@ -15,7 +15,8 @@ import {
   ClipboardList,
   CheckSquare,
   FileBarChart,
-  Cpu
+  Cpu,
+  HeartPulse
 } from 'lucide-react';
 import { useAuth } from '../services/AuthContext';
 
@@ -47,6 +48,8 @@ const sidebarSections = [
     items: [
       { to: '/care-plans', label: 'Care Plans', icon: ClipboardList, roles: ['ADMIN', 'DOCTOR'] },
       { to: '/treatment-tracking', label: 'Treatment Tracking', icon: CheckSquare, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
+      { to: '/health-monitoring', label: 'Health Monitoring', icon: HeartPulse, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
+      { to: '/patient-progress', label: 'Patient Progress', icon: TrendingUp, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
       { to: '/reports', label: 'Reports', icon: FileBarChart, roles: ['ADMIN', 'DOCTOR'] },
     ],
   },

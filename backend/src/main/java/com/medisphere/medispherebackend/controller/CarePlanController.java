@@ -1,23 +1,35 @@
 package com.medisphere.medispherebackend.controller;
 
+import com.medisphere.medispherebackend.dto.CarePlanValidationDto;
 import com.medisphere.medispherebackend.dto.GenerateCarePlanRequest;
+import com.medisphere.medispherebackend.dto.PatientData;
 import com.medisphere.medispherebackend.dto.UpdateCarePlanStatusRequest;
 import com.medisphere.medispherebackend.model.CarePlan;
 import com.medisphere.medispherebackend.service.CarePlanService;
+import com.medisphere.medispherebackend.service.CarePlanValidationService;
+import com.medisphere.medispherebackend.service.PatientDataService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping({"/api/care-plans", "/api/careplans"})
 public class CarePlanController {
 
     private final CarePlanService carePlanService;
+    private final CarePlanValidationService carePlanValidationService;
+    private final PatientDataService patientDataService;
 
-    public CarePlanController(CarePlanService carePlanService) {
+    public CarePlanController(CarePlanService carePlanService,
+                              CarePlanValidationService carePlanValidationService,
+                              @Autowired(required = false) PatientDataService patientDataService) {
         this.carePlanService = carePlanService;
+        this.carePlanValidationService = carePlanValidationService;
+        this.patientDataService = patientDataService;
     }
 
     /**
@@ -97,5 +109,43 @@ public class CarePlanController {
         return carePlanService.updateCarePlanStatus(id, statusRequest.getStatus())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * 6. Validate Care Plan by ID
+     * GET /api/care-plans/{id}/validation
+     */
+    @GetMapping("/{id}/validation")
+    public ResponseEntity<CarePlanValidationDto> getCarePlanValidation(@PathVariable String id) {
+        Optional<CarePlan> planOpt = carePlanService.getCarePlanById(id);
+        if (planOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        CarePlan plan = planOpt.get();
+        PatientData pd = null;
+        if (patientDataService != null && plan.getPatientId() != null) {
+            pd = patientDataService.getPatientById(plan.getPatientId()).orElse(null);
+        }
+        CarePlanValidationDto validation = carePlanValidationService.validateCarePlan(plan, pd);
+        return ResponseEntity.ok(validation);
+    }
+
+    /**
+     * 7. Validate latest Care Plan for Patient
+     * GET /api/care-plans/patient/{patientId}/validation
+     */
+    @GetMapping("/patient/{patientId}/validation")
+    public ResponseEntity<CarePlanValidationDto> getPatientLatestCarePlanValidation(@PathVariable String patientId) {
+        Optional<CarePlan> planOpt = carePlanService.getLatestCarePlanByPatientId(patientId);
+        if (planOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        CarePlan plan = planOpt.get();
+        PatientData pd = null;
+        if (patientDataService != null && plan.getPatientId() != null) {
+            pd = patientDataService.getPatientById(plan.getPatientId()).orElse(null);
+        }
+        CarePlanValidationDto validation = carePlanValidationService.validateCarePlan(plan, pd);
+        return ResponseEntity.ok(validation);
     }
 }

@@ -18,6 +18,8 @@ import PlaceholderPage from './pages/PlaceholderPage';
 import MonitoringDashboard from './pages/MonitoringDashboard';
 import CarePlansPage from './pages/CarePlansPage';
 import TreatmentTrackingPage from './pages/TreatmentTrackingPage';
+import HealthMonitoringPage from './pages/HealthMonitoringPage';
+import PatientProgressPage from './pages/PatientProgressPage';
 
 import {
   TrendingUp,
@@ -109,6 +111,16 @@ function AuthenticatedLayout() {
             <Route path="/treatment-tracking" element={
               <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR', 'NURSE']}>
                 <TreatmentTrackingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/health-monitoring" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR', 'NURSE']}>
+                <HealthMonitoringPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/patient-progress" element={
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR', 'NURSE']}>
+                <PatientProgressPage />
               </ProtectedRoute>
             } />
             <Route path="/reports" element={

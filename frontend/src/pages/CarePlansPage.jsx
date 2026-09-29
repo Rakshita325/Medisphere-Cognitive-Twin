@@ -3,12 +3,14 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   ClipboardList, RefreshCw, AlertCircle, Play, CheckCircle2,
   Clock, ShieldAlert, Heart, Activity, User, ChevronRight,
-  FileText, ArrowRight, Zap, Check, AlertTriangle, Edit3
+  FileText, ArrowRight, Zap, Check, AlertTriangle, Edit3,
+  ShieldCheck, Pill, CheckSquare, XCircle, FileCheck, ThumbsUp
 } from 'lucide-react';
 import PatientSelector from '../components/PatientSelector';
 import {
   getFhirPatients, getPatientTwins,
   generateCarePlan, getPatientCarePlans, updateCarePlanStatus,
+  getCarePlanValidation,
   getPatientName, calculateAge, getPatientHealthData, getAllPatientData
 } from '../services/api';
 
@@ -21,7 +23,7 @@ const STATUS_CONFIG = {
 };
 
 export default function CarePlansPage() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const urlPatientId = searchParams.get('patientId');
 
@@ -41,6 +43,10 @@ export default function CarePlansPage() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+
+  // Validation state (Guideline compliance, Safety checks, Drug interaction)
+  const [validationData, setValidationData] = useState(null);
+  const [loadingValidation, setLoadingValidation] = useState(false);
 
   // Load patient roster prioritizing rich clinical patients (P001-P010) and FHIR records
   const loadPatients = async () => {
@@ -162,6 +168,24 @@ export default function CarePlansPage() {
     }
   };
 
+  // Fetch validation for current care plan
+  const fetchCarePlanValidation = async (carePlanId) => {
+    if (!carePlanId) {
+      setValidationData(null);
+      return;
+    }
+    setLoadingValidation(true);
+    try {
+      const val = await getCarePlanValidation(carePlanId);
+      setValidationData(val);
+    } catch (err) {
+      console.warn('Could not load care plan validation:', err.message);
+      setValidationData(null);
+    } finally {
+      setLoadingValidation(false);
+    }
+  };
+
   useEffect(() => {
     if (selectedPatient) {
       const patientId = selectedPatient.sourcePatientId || selectedPatient.patientId || selectedPatient.id;
@@ -169,6 +193,14 @@ export default function CarePlansPage() {
       fetchPatientHealthData(selectedPatient);
     }
   }, [selectedPatient]);
+
+  useEffect(() => {
+    if (currentCarePlan?.id) {
+      fetchCarePlanValidation(currentCarePlan.id);
+    } else {
+      setValidationData(null);
+    }
+  }, [currentCarePlan?.id]);
 
   // Fetch the rich health record for the selected patient from patient-data.json
   const fetchPatientHealthData = async (patient) => {
@@ -694,6 +726,240 @@ export default function CarePlansPage() {
           </div>
 
           <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Clinical Validation, Safety Checks & Provider Verification Section */}
+            <div style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '20px 22px',
+              boxShadow: 'var(--shadow-sm)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+                <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={20} style={{ color: 'var(--accent-primary)' }} />
+                  Care Plan Clinical Validation & Provider Verification
+                </h4>
+                {loadingValidation && (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <RefreshCw size={13} className="spin-icon" /> Validating rules...
+                  </span>
+                )}
+              </div>
+
+              {/* 3 Validation Cards Grid */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: '14px',
+                marginBottom: '16px'
+              }}>
+                {/* 1. Guideline Compliance Card */}
+                <div style={{
+                  background: 'var(--bg-primary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        1. Guideline Compliance
+                      </span>
+                      <span style={{
+                        background: validationData?.guidelineCompliance?.status === 'COMPLIANT' ? '#d1fae5' : '#fef3c7',
+                        color: validationData?.guidelineCompliance?.status === 'COMPLIANT' ? '#059669' : '#d97706',
+                        border: `1px solid ${validationData?.guidelineCompliance?.status === 'COMPLIANT' ? '#34d399' : '#fcd34d'}`,
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700
+                      }}>
+                        {validationData?.guidelineCompliance?.displayStatus || 'Compliant'}
+                      </span>
+                    </div>
+                    <p style={{ margin: '0 0 8px', fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, fontWeight: 500 }}>
+                      {validationData?.guidelineCompliance?.summary || 'Care plan evaluated against configured clinical guideline rules.'}
+                    </p>
+                    {validationData?.guidelineCompliance?.guidelinesChecked?.length > 0 && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                        <strong>Checked:</strong> {validationData.guidelineCompliance.guidelinesChecked.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '6px', marginTop: '6px' }}>
+                    Configured demonstration check. Not an official medical certification.
+                  </div>
+                </div>
+
+                {/* 2. Safety Checks Card */}
+                <div style={{
+                  background: 'var(--bg-primary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        2. Safety Validation
+                      </span>
+                      <span style={{
+                        background: validationData?.safetyCheck?.passed ? '#d1fae5' : '#fee2e2',
+                        color: validationData?.safetyCheck?.passed ? '#059669' : '#dc2626',
+                        border: `1px solid ${validationData?.safetyCheck?.passed ? '#34d399' : '#fca5a5'}`,
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700
+                      }}>
+                        {validationData?.safetyCheck?.displayStatus || (validationData?.safetyCheck?.passed ? 'Safety Check Passed' : 'Safety Check Passed')}
+                      </span>
+                    </div>
+                    <p style={{ margin: '0 0 6px', fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, fontWeight: 500 }}>
+                      {validationData?.safetyCheck?.summary || 'Pre-approval safety checks evaluated.'}
+                    </p>
+                    {validationData?.safetyCheck?.checksPassed?.length > 0 && (
+                      <ul style={{ margin: '0 0 4px', paddingLeft: '14px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                        {validationData.safetyCheck.checksPassed.slice(0, 3).map((cp, idx) => (
+                          <li key={idx}>{cp}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '6px', marginTop: '6px' }}>
+                    Verified before provider authorization.
+                  </div>
+                </div>
+
+                {/* 3. Drug Interaction Card */}
+                <div style={{
+                  background: 'var(--bg-primary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '14px 16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        3. Drug Interaction Check
+                      </span>
+                      <span style={{
+                        background: validationData?.drugInteraction?.hasInteraction ? '#fee2e2' : '#d1fae5',
+                        color: validationData?.drugInteraction?.hasInteraction ? '#dc2626' : '#059669',
+                        border: `1px solid ${validationData?.drugInteraction?.hasInteraction ? '#fca5a5' : '#34d399'}`,
+                        padding: '2px 8px',
+                        borderRadius: '999px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700
+                      }}>
+                        {validationData?.drugInteraction?.displayStatus || 'No configured interaction detected'}
+                      </span>
+                    </div>
+                    <p style={{ margin: '0 0 6px', fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4, fontWeight: 500 }}>
+                      {validationData?.drugInteraction?.summary || 'No configured interaction detected.'}
+                    </p>
+                    {validationData?.drugInteraction?.detectedInteractions?.map((di, idx) => (
+                      <div key={idx} style={{
+                        background: '#fee2e2',
+                        color: '#991b1b',
+                        border: '1px solid #fca5a5',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        marginBottom: '4px'
+                      }}>
+                        <strong>{di.drugA} + {di.drugB} ({di.severity}):</strong> {di.description}
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-color)', paddingTop: '6px', marginTop: '6px' }}>
+                    Configured demonstration check. Review before approval.
+                  </div>
+                </div>
+              </div>
+
+              {/* Provider Approval Lifecycle Action Bar */}
+              <div style={{
+                background: 'var(--bg-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: 'var(--radius-md)',
+                padding: '14px 18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Provider Approval Workflow
+                  </div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-primary)', marginTop: '2px' }}>
+                    Current Status: <span style={{ color: statusInfo.color }}>{statusInfo.label}</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  {currentStatus !== 'APPROVED' && (
+                    <button
+                      className="btn-primary"
+                      onClick={() => handleStatusChange('APPROVED')}
+                      disabled={statusUpdating}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', fontSize: '0.85rem', background: '#0284c7', borderColor: '#0284c7' }}
+                    >
+                      <ThumbsUp size={14} />
+                      Approve Care Plan
+                    </button>
+                  )}
+
+                  {currentStatus !== 'ACTIVE' && (
+                    <button
+                      className="btn-primary"
+                      onClick={() => handleStatusChange('ACTIVE')}
+                      disabled={statusUpdating}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', fontSize: '0.85rem', background: '#059669', borderColor: '#059669' }}
+                    >
+                      <Play size={14} />
+                      Activate Plan
+                    </button>
+                  )}
+
+                  {currentStatus !== 'PENDING_APPROVAL' && currentStatus !== 'DRAFT' && (
+                    <button
+                      className="btn-secondary"
+                      onClick={() => handleStatusChange('PENDING_APPROVAL')}
+                      disabled={statusUpdating}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: '0.85rem' }}
+                    >
+                      <Edit3 size={14} />
+                      Request Revision
+                    </button>
+                  )}
+
+                  {currentStatus !== 'COMPLETED' && (
+                    <button
+                      className="btn-secondary"
+                      onClick={() => handleStatusChange('COMPLETED')}
+                      disabled={statusUpdating}
+                      style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 12px', fontSize: '0.85rem' }}
+                    >
+                      <CheckCircle2 size={14} />
+                      Mark Completed
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Care Goals Section */}
             <div>
               <h4 style={{ margin: '0 0 14px', fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>

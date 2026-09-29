@@ -462,6 +462,22 @@ export async function updateCarePlanStatus(id, status) {
   });
 }
 
+/**
+ * Fetch Guideline Compliance, Safety Checks, and Drug Interaction validation for Care Plan.
+ * GET /api/care-plans/{id}/validation
+ */
+export async function getCarePlanValidation(carePlanId) {
+  return await request(`/api/care-plans/${encodeURIComponent(carePlanId)}/validation`);
+}
+
+/**
+ * Fetch validation for patient's latest care plan.
+ * GET /api/care-plans/patient/{patientId}/validation
+ */
+export async function getPatientCarePlanValidation(patientId) {
+  return await request(`/api/care-plans/patient/${encodeURIComponent(patientId)}/validation`);
+}
+
 // ============================================================
 // Milestone 4 Part 2 — Treatment Tracking & Adherence API
 // ============================================================
@@ -562,5 +578,56 @@ export async function initializeCarePlanTracking(carePlanId) {
   });
 }
 
+// ============================================================
+// Milestone 4 Part 3 — Health Monitoring API
+// ============================================================
 
+/**
+ * Record a new health measurement for a patient.
+ * POST /api/health-monitoring
+ */
+export async function createHealthMeasurement(data) {
+  return await request('/api/health-monitoring', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+/**
+ * Fetch all health measurements for a specific patient (newest first).
+ * GET /api/health-monitoring/patient/{patientId}
+ */
+export async function getPatientHealthMeasurements(patientId) {
+  return await request(`/api/health-monitoring/patient/${encodeURIComponent(patientId)}`);
+}
+
+/**
+ * Fetch health measurements for a specific patient filtered by type.
+ * GET /api/health-monitoring/patient/{patientId}/type/{measurementType}
+ */
+export async function getPatientHealthMeasurementsByType(patientId, measurementType) {
+  return await request(`/api/health-monitoring/patient/${encodeURIComponent(patientId)}/type/${encodeURIComponent(measurementType)}`);
+}
+
+/**
+ * Delete a health measurement by ID.
+ * DELETE /api/health-monitoring/{id}
+ */
+export async function deleteHealthMeasurement(id) {
+  return await request(`/api/health-monitoring/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+}
+
+// ============================================================
+// Milestone 4 Part 4 — Patient Progress / Improvement API
+// ============================================================
+
+/**
+ * Fetch progress comparison (baseline vs. latest) for a specific patient.
+ * GET /api/progress/patient/{patientId}
+ */
+export async function getPatientProgress(patientId) {
+  return await request(`/api/progress/patient/${encodeURIComponent(patientId)}`);
+}
 

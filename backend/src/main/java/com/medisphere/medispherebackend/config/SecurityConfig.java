@@ -54,6 +54,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/treatment-tracking/**")
                         .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
 
+                        // Health Monitoring APIs (Milestone 4 Part 3)
+                        .requestMatchers("/api/health-monitoring/**")
+                        .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+
+                        // Progress / Improvement APIs (Milestone 4 Part 4)
+                        .requestMatchers("/api/progress/**")
+                        .hasAnyRole("ADMIN", "DOCTOR", "NURSE")
+
                         // Patient Data APIs (Rich health records from patient-data.json)
                         .requestMatchers("/api/patient-data/**")
                         .hasAnyRole("ADMIN", "DOCTOR", "NURSE")

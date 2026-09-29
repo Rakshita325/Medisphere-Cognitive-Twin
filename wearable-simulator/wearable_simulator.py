@@ -102,11 +102,14 @@ def generate_abnormal_temperature():
 # Create Vital
 # ============================================================
 
-def create_vital(patient, vital_type, abnormal_vital=None):
+def create_vital(patient, vital_type, abnormal_vital=None, target_patient_id=None):
 
     timestamp = datetime.now(timezone.utc).isoformat()
 
-    is_abnormal = vital_type == abnormal_vital
+    is_abnormal = (
+        vital_type == abnormal_vital
+        and (target_patient_id is None or patient["patientId"] == target_patient_id)
+    )
 
     # --------------------------------------------------------
     # Heart Rate
@@ -220,8 +223,9 @@ def main():
         print("Kafka connection successful!")
         print()
         print("Starting wearable simulation...")
-        print("Abnormal episodes will last approximately 45 seconds.")
+        print(f"Abnormal episodes will last approximately {ABNORMAL_DURATION} seconds.")
         print("Only ONE abnormal vital will be active at a time.")
+        print(f"Recovery / normal period between episodes: {NORMAL_DURATION} seconds.")
         print("Press Ctrl+C to stop.")
         print()
 
@@ -246,12 +250,12 @@ def main():
     # --------------------------------------------------------
 
     abnormal_vital = None
+    target_patient = None
     episode_start_time = None
 
     last_episode_end_time = time.time()
 
-    # Change this to control how frequently abnormal episodes
-    # can start.
+    # Gap before the first abnormal episode
     next_episode_after = NORMAL_DURATION
 
 
@@ -272,6 +276,7 @@ def main():
             ):
 
                 abnormal_vital = random.choice(vital_types)
+                target_patient = random.choice(PATIENTS)["patientId"]
 
                 episode_start_time = current_time
 
@@ -279,7 +284,8 @@ def main():
                 print("!" * 70)
                 print(
                     f"⚠ ABNORMAL EPISODE STARTED | "
-                    f"Vital: {abnormal_vital}"
+                    f"Patient: {target_patient} | Vital: {abnormal_vital} "
+                    f"(Duration: {ABNORMAL_DURATION}s)"
                 )
                 print("!" * 70)
                 print()
@@ -298,12 +304,14 @@ def main():
                 print("-" * 70)
                 print(
                     f"✓ ABNORMAL EPISODE ENDED | "
-                    f"{abnormal_vital} returned to normal"
+                    f"Patient: {target_patient} | {abnormal_vital} returned to normal "
+                    f"(Cooldown: {NORMAL_DURATION}s)"
                 )
                 print("-" * 70)
                 print()
 
                 abnormal_vital = None
+                target_patient = None
                 episode_start_time = None
 
                 last_episode_end_time = current_time
@@ -322,7 +330,8 @@ def main():
                     vital = create_vital(
                         patient,
                         vital_type,
-                        abnormal_vital
+                        abnormal_vital,
+                        target_patient
                     )
 
 
@@ -349,18 +358,22 @@ def main():
                         else f"{vital['systolic']}/{vital['diastolic']}"
                     )
 
+                    is_item_abnormal = (
+                        vital_type == abnormal_vital
+                        and (target_patient is None or patient["patientId"] == target_patient)
+                    )
 
                     status = (
                         "⚠ ABNORMAL"
-                        if vital_type == abnormal_vital
+                        if is_item_abnormal
                         else "NORMAL"
                     )
 
 
                     print(
                         f"{patient['patientId']} | "
-                        f"{vital_type} | "
-                        f"{display_value} {vital['unit']} | "
+                        f"{vital_type:<14} | "
+                        f"{display_value:>7} {vital['unit']:<4} | "
                         f"{status}"
                     )
 
