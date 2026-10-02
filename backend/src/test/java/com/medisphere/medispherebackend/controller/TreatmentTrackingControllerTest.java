@@ -1,7 +1,5 @@
 package com.medisphere.medispherebackend.controller;
 
-import com.medisphere.medispherebackend.dto.CreateTreatmentTrackingRequest;
-import com.medisphere.medispherebackend.dto.UpdateTreatmentStatusRequest;
 import com.medisphere.medispherebackend.model.TreatmentTracking;
 import com.medisphere.medispherebackend.service.CarePlanService;
 import com.medisphere.medispherebackend.service.TreatmentTrackingService;
@@ -13,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.*;
 

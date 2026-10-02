@@ -3,8 +3,6 @@ package com.medisphere.medispherebackend.service;
 import com.medisphere.medispherebackend.dto.CarePlanValidationDto;
 import com.medisphere.medispherebackend.dto.PatientData;
 import com.medisphere.medispherebackend.model.CarePlan;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,8 +19,6 @@ import java.util.regex.Pattern;
  */
 @Service
 public class CarePlanValidationService {
-
-    private static final Logger log = LoggerFactory.getLogger(CarePlanValidationService.class);
 
     // Configured local drug interaction demonstration database
     private static final List<ConfiguredDrugInteraction> CONFIGURED_INTERACTIONS = List.of(

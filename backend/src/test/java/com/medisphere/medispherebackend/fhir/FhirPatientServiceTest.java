@@ -1,7 +1,6 @@
 package com.medisphere.medispherebackend.fhir;
 
 import ca.uhn.fhir.rest.client.api.IGenericClient;
-import com.medisphere.medispherebackend.model.PatientTwin;
 import com.medisphere.medispherebackend.service.PatientDataFhirService;
 import com.medisphere.medispherebackend.service.PatientTwinService;
 import org.hl7.fhir.r4.model.Patient;

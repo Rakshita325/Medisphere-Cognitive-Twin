@@ -7,9 +7,7 @@ import com.medisphere.medispherebackend.repository.CarePlanRepository;
 import com.medisphere.medispherebackend.repository.TreatmentTrackingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
-import java.time.Instant;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;

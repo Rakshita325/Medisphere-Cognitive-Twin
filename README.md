@@ -1,14 +1,13 @@
 # MediSphere Cognitive Twin
 
-MediSphere is a synthetic Digital Healthcare Twin prototype for demonstrating how healthcare data can be integrated, stored, monitored, and analyzed using FHIR, MongoDB, Kafka, machine learning, and real-time alerting.
+MediSphere is a synthetic Digital Healthcare Twin prototype for demonstrating how healthcare data can be integrated, stored, monitored, and analyzed using FHIR, MongoDB, Kafka, machine learning, real-time alerting, and personalized care management.
 
 The platform follows the flow:
 
-**Collect Data → Create Digital Twin → Predict Risk → Monitor Patient → Alert Doctor → Create Care Plan**
+**Collect Data → Create Digital Twin → Predict Risk → Monitor Patient → Alert Doctor → Create Care Plan → Track Treatment → Check Improvement**
 
 The project uses synthetic/demo data and must not be treated as real clinical data.
 
----
 
 ## Project Milestones
 
@@ -31,7 +30,6 @@ Supported roles:
 * `DOCTOR`
 * `NURSE`
 
----
 
 ### Milestone 2 — Federated Risk Prediction & Explainability
 
@@ -48,8 +46,6 @@ The second milestone adds machine-learning-based risk prediction for cardiovascu
 
 #### Current Validation Metrics
 
-These are the current measured metrics from the available validation/test evaluation:
-
 | Model    | Accuracy | ROC-AUC |
 | -------- | -------: | ------: |
 | CVD      |   84.37% |  0.6975 |
@@ -59,7 +55,6 @@ The project reports the measured results honestly and does not artificially incr
 
 #### ML Data Flow
 
-```text
 Patient Data
      ↓
 Spring Boot Backend
@@ -73,9 +68,6 @@ Risk Prediction
 SHAP Explainability
      ↓
 React Risk Prediction UI
-```
-
----
 
 ### Milestone 3 — Continuous Monitoring & Alerts
 
@@ -92,26 +84,11 @@ A Python wearable simulator generates synthetic:
 
 The generated data is published to Kafka topic:
 
-```text
 patient-vitals
-```
-
-Example:
-
-```text
-P001 | Heart Rate | 74 bpm
-P001 | SpO2 | 97 %
-P001 | Blood Pressure | 124/74 mmHg
-P001 | Temperature | 36.7 °C
-```
-
----
 
 #### Kafka Streaming
 
-Kafka receives the simulated vital events and Spring Boot consumes them in real time.
 
-```text
 Wearable Simulator
        ↓
 Apache Kafka
@@ -121,13 +98,11 @@ patient-vitals
 Spring Boot Kafka Consumer
        ↓
 MongoDB vital_records
-```
 
----
 
 #### Anomaly Detection
 
-The current monitoring service checks vital values against configured clinical thresholds.
+The monitoring service checks vital values against configured thresholds.
 
 | Vital        | Anomaly Condition     |
 | ------------ | --------------------- |
@@ -136,10 +111,6 @@ The current monitoring service checks vital values against configured clinical t
 | Systolic BP  | `> 140 mmHg`          |
 | Diastolic BP | `> 90 mmHg`           |
 | Temperature  | `< 35°C` or `> 38°C`  |
-
-The system distinguishes between normal and abnormal vital events before creating alerts.
-
----
 
 #### Clinical Rule Engine
 
@@ -150,36 +121,9 @@ The Clinical Rule Engine determines:
 * Recommended action
 * Alert routing
 
-Examples:
-
-```text
-Heart Rate > 120
-→ HIGH
-→ Review patient vitals
-→ Cardiologist
-```
-
-```text
-SpO2 < 90
-→ CRITICAL
-→ Immediate clinical review recommended
-→ Cardiologist
-```
-
-```text
-Temperature > 38
-→ HIGH
-→ Review patient vitals
-→ General Physician
-```
-
----
-
 #### Real-Time Alert Engine
 
-When an anomaly is detected:
 
-```text
 Vital Event
      ↓
 Anomaly Detection
@@ -193,71 +137,251 @@ Duplicate Alert Prevention
 WebSocket
      ↓
 Doctor Dashboard
-```
 
-The dashboard displays information such as:
-
-```text
-HIGH ALERT
-
-Patient: Sarah M. (P001)
-Vital: Heart Rate
-Value: 145 BPM
-Assigned To: Cardiologist
-Notification: NOTIFIED
-Recommended Action: Review patient vitals
-Status: NEW
-```
 
 Alerts can be acknowledged from the dashboard.
 
-```text
 NEW → ACKNOWLEDGED
-```
 
-`NOTIFIED` represents notification to the MediSphere doctor dashboard through the real-time WebSocket system. The current prototype does not claim SMS, email, or mobile push notification delivery.
+The current prototype does not claim SMS, email, or mobile push notification delivery.
 
----
 
-## Milestone 3 Validation
+## Milestone 4 — Personalized Care Plan & Treatment Management
 
-A labeled validation dataset containing 120 synthetic samples was created to validate the existing rule-based anomaly detection service.
+The fourth milestone focuses on using patient clinical information and risk predictions to create personalized care plans, track treatment, monitor health measurements, and evaluate patient progress.
 
-### Dataset
+### Care Plan Management
 
-| Vital          | Samples |
-| -------------- | ------: |
-| Heart Rate     |      30 |
-| SpO2           |      30 |
-| Blood Pressure |      30 |
-| Temperature    |      30 |
-| **Total**      | **120** |
+The system generates patient-specific care plans using:
 
-Each vital contains normal and abnormal boundary/threshold cases.
+* Patient clinical information
+* Existing medical conditions
+* CVD risk prediction
+* Diabetes risk prediction
+* Clinical goals
+* Treatment interventions
 
-### Results
+The generated care plans are persisted in MongoDB so that they can be retrieved later.
 
-| Metric           |   Result |
-| ---------------- | -------: |
-| True Positives   |       60 |
-| False Positives  |        0 |
-| True Negatives   |       60 |
-| False Negatives  |        0 |
-| Precision        | **100%** |
-| False Alert Rate |   **0%** |
-| Accuracy         | **100%** |
+### Risk-Based Care Planning
 
-The validation results above apply specifically to the **120-sample labeled anomaly-detection dataset and the configured rule-based detection logic**. They should not be interpreted as machine-learning model accuracy.
+Milestone 4 integrates the risk predictions from Milestone 2.
 
-For this project, false alert rate is calculated as:
+Patient Clinical Data
+        ↓
+M2 Feature Extraction
+        ↓
+CVD / Diabetes Risk Prediction
+        ↓
+Patient-Specific Risk
+        ↓
+M4 Care Plan
 
-```text
-False Alert Rate = FP / (TP + FP) × 100
-```
+Patients without the required M2 features are handled using an `INSUFFICIENT_DATA` state rather than generating an unsupported prediction.
 
-The Milestone 3 specification includes a 3.2-minute response-time target. This prototype has not established a measured 3.2-minute average response time, so that value is treated as a project target rather than a measured result.
+### Treatment Tracking
 
----
+The system allows doctors to:
+
+* Add treatment interventions
+* Track treatment status
+* Monitor adherence
+* Review treatment progress
+
+Example:
+
+
+Care Plan
+    ↓
+Intervention
+    ↓
+Treatment Tracking
+    ↓
+Adherence / Status
+
+### Health Monitoring
+
+Doctors can record new health measurements such as:
+
+* Blood pressure
+* Glucose
+* Heart rate
+* SpO2
+* Cholesterol
+* BMI
+
+Measurements are stored as longitudinal records so that the patient's health history can be reviewed over time.
+
+### Progress Comparison
+
+The system compares baseline and latest health measurements.
+
+Baseline Measurement
+        ↓
+New Measurement
+        ↓
+Comparison
+        ↓
+Progress / Trend
+
+This provides a longitudinal view of changes in the patient's health measurements.
+
+### Care Plan Validation
+
+A rule-based validation layer checks generated care plans for configured:
+
+* Clinical guideline conditions
+* Patient safety boundaries
+* Contraindications
+* Drug interactions
+* Care-plan completeness
+
+### Milestone 4 Data Flow
+
+Patient Data
+     ↓
+M2 Risk Prediction
+     ↓
+Personalized Care Plan
+     ↓
+Add Intervention
+     ↓
+Treatment Tracking
+     ↓
+Add New Measurement
+     ↓
+Health Monitoring
+     ↓
+Progress Comparison
+     ↓
+Doctor Dashboard
+
+### Milestone 4 Persistence
+
+
+Care Plan / Treatment / Measurement
+              ↓
+           MongoDB
+              ↓
+        Retrieve Later
+              ↓
+        React Dashboard
+
+
+## Milestone 4 Main APIs
+
+### Patient Data
+
+
+GET  /api/patient-data
+GET  /api/patient-data/{patientId}
+
+
+### Risk Prediction
+
+POST /api/ml/predict/cvd
+POST /api/ml/predict/diabetes
+
+
+### Care Plans
+
+POST /api/careplans/generate
+GET  /api/careplans/patient/{patientId}
+
+
+### Treatment Tracking
+
+Treatment tracking APIs support creating and retrieving treatment records, recording adherence, and calculating treatment compliance.
+
+### Health Monitoring
+
+Health monitoring APIs support adding and retrieving longitudinal health measurements.
+
+### Patient Progress
+
+Patient progress APIs provide baseline-versus-latest health comparisons and progress information.
+
+
+## Milestone 4 Frontend Modules
+
+The React frontend provides separate interfaces for:
+
+* Care Plans
+* Treatment Tracking
+* Health Monitoring
+* Patient Progress
+* Risk Predictions
+
+The doctor can navigate between these modules from the application sidebar.
+
+
+## Complete System Data Flow
+
+### Patient Data
+
+patient-data.json
+        ↓
+Spring Boot
+        ↓
+FHIR / Clinical Patient Data
+        ↓
+MongoDB
+        ↓
+React Patient Dashboard
+
+
+### Risk Prediction
+
+Patient Data
+     ↓
+Spring Boot
+     ↓
+Flask ML Service
+     ↓
+Federated Keras Model
+     ↓
+CVD / Diabetes Risk
+     ↓
+React Risk Prediction Dashboard
+     ↓
+M4 Care Plan
+
+### Real-Time Monitoring
+
+Wearable Simulator
+        ↓
+Kafka patient-vitals
+        ↓
+Spring Boot Consumer
+        ↓
+MongoDB vital_records
+        ↓
+Anomaly Detection
+        ↓
+Clinical Rule Engine
+        ↓
+Alert Service
+        ↓
+WebSocket
+        ↓
+React Monitoring Dashboard
+
+### Care Management
+
+Patient Data + Risk
+        ↓
+Care Plan
+        ↓
+Intervention
+        ↓
+Treatment Tracking
+        ↓
+New Health Measurement
+        ↓
+Progress Comparison
+        ↓
+Doctor Dashboard
+
 
 ## Stack
 
@@ -276,13 +400,11 @@ The Milestone 3 specification includes a 3.2-minute response-time target. This p
 * SHAP
 * WebSocket / STOMP
 
----
 
 ## Configuration
 
 Set these environment variables for a local run:
 
-```text
 MONGODB_URI=mongodb://localhost:27017/medisphere
 
 MONGODB_DATABASE=medisphere
@@ -290,39 +412,26 @@ MONGODB_DATABASE=medisphere
 KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 
 FHIR_BASE_URL=https://r4.quality.hl7.org/fhir
-```
 
 Do not commit credentials.
 
 The local configuration uses safe localhost defaults. Use environment variables for MongoDB Atlas or other hosted services.
 
----
-
 ## Kafka Configuration
 
 Kafka runs locally on:
 
-```text
 localhost:9092
-```
+
 
 Main topics:
 
-```text
 patient-vitals
 consent-events
-```
 
-Consumer groups include:
-
-```text
-medisphere-vitals
-medisphere-consent
-```
 
 The wearable simulator publishes synthetic vital events to `patient-vitals`.
 
----
 
 ## Running the Project
 
@@ -330,246 +439,88 @@ The wearable simulator publishes synthetic vital events to `patient-vitals`.
 
 Make sure MongoDB is running locally:
 
-```text
 mongodb://localhost:27017
-```
 
----
 
 ### 2. Start Kafka
 
 If using the project's Docker configuration:
 
-```powershell
+powershell
 docker compose up -d
-```
+
 
 Alternatively, start the local Kafka installation according to the project environment.
 
-Verify that port `9092` is reachable:
-
-```powershell
-Test-NetConnection -ComputerName localhost -Port 9092
-```
-
----
-
 ### 3. Start the Spring Boot Backend
-
-Set the required environment variables:
-
-```powershell
+powershell
 $env:MONGODB_URI = "mongodb://localhost:27017/medisphere"
-
 $env:KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
-
 $env:SERVER_PORT = "8081"
-```
+
 
 Start the backend:
 
-```powershell
+powershell
 ./mvnw.cmd spring-boot:run
-```
 
 Backend:
 
-```text
 http://localhost:8081
-```
 
----
 
 ### 4. Start the ML Service
 
 The Flask ML service runs on:
 
-```text
 http://127.0.0.1:5000
-```
 
-Available endpoints include:
+Available endpoints:
 
-```text
 GET  /health
 POST /predict/cvd
 POST /predict/diabetes
-```
-
----
 
 ### 5. Start the Wearable Simulator
 
-The simulator publishes synthetic vital events to:
-
-```text
-patient-vitals
-```
-
-Example command:
-
-```powershell
+powershell
 python wearable_simulator.py
-```
 
-The simulator periodically generates:
-
-* Heart Rate
-* SpO2
-* Blood Pressure
-* Temperature
-
----
 
 ### 6. Start the React Frontend
 
-```powershell
+powershell
 cd frontend
 npm install
 npm run dev
-```
-
----
 
 ## Authentication
 
 The API uses HTTP Basic authentication with BCrypt passwords and roles:
 
-```text
 ADMIN
 DOCTOR
 NURSE
-```
 
 Development users are initialized by `DataInitializer`.
 
 Change or remove development credentials before using the application outside the demo environment.
 
----
-
-## Main APIs
-
-### Authentication
-
-```text
-POST /api/auth/login
-POST /api/auth/signup
-```
-
-### FHIR
-
-```text
-POST /api/fhir/import
-GET  /api/fhir/patients
-GET  /api/fhir/patients/{id}/save-twin
-```
-
-### Patient Twins
-
-```text
-GET|POST|PUT|DELETE /api/patient-twins
-```
-
-### Vitals
-
-```text
-POST /api/vitals
-GET  /api/vital-records/{patientId}/latest
-```
-
-### Consent
-
-```text
-POST /api/consent
-PUT  /api/consent/revoke/{patientId}
-GET  /api/consent/{patientId}
-```
-
-### Alerts
-
-```text
-GET  /api/alerts/active
-GET  /api/alerts
-GET  /api/alerts/patient/{patientId}
-PUT  /api/alerts/{id}/acknowledge
-```
-
-### WebSocket
-
-```text
-ws://localhost:8081/ws
-```
-
-Alert topic:
-
-```text
-/topic/alerts
-```
-
----
-
-## Data Flow
-
-### Patient Data
-
-```text
-patient-data.json
-        ↓
-Spring Boot
-        ↓
-FHIR Patient / Condition / Observation
-        ↓
-MongoDB PatientTwin
-        ↓
-React Patient 360 Dashboard
-```
-
-### Real-Time Monitoring
-
-```text
-Wearable Simulator
-        ↓
-Kafka patient-vitals
-        ↓
-Spring Boot Consumer
-        ↓
-MongoDB vital_records
-        ↓
-Anomaly Detection
-        ↓
-Clinical Rule Engine
-        ↓
-Alert Service
-        ↓
-WebSocket
-        ↓
-React Monitoring Dashboard
-```
-
-### Risk Prediction
-
-```text
-Patient Data
-        ↓
-Spring Boot
-        ↓
-Flask ML Service
-        ↓
-Federated Keras Model
-        ↓
-CVD / Diabetes Risk Prediction
-        ↓
-SHAP Explanation
-        ↓
-React Risk Prediction Dashboard
-```
-
----
 
 ## Project Data and Privacy
 
 All patient information included in this repository is synthetic demonstration data.
 
-The project is intended as a prototype for demonstrating healthcare interoperability, digital-twin concepts, machine learning, real-time monitoring, and alerting.
+The project is intended as a prototype for demonstrating:
+
+* Healthcare interoperability
+* Digital-twin concepts
+* Machine learning
+* Federated risk prediction
+* Real-time monitoring
+* Clinical alerting
+* Personalized care planning
+* Treatment tracking
+* Longitudinal health monitoring
 
 It is not a clinical decision-support system and should not be used to make real patient-care decisions.

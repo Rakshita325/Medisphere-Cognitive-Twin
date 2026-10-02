@@ -1,7 +1,5 @@
 package com.medisphere.medispherebackend.security;
 
-import com.medisphere.medispherebackend.config.SecurityConfig;
-import com.medisphere.medispherebackend.controller.FhirPatientController;
 import com.medisphere.medispherebackend.fhir.FhirPatientService;
 import com.medisphere.medispherebackend.service.ConsentAuthorizationService;
 import org.junit.jupiter.api.Test;
