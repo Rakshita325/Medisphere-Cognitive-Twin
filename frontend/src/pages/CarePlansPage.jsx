@@ -280,6 +280,21 @@ export default function CarePlansPage() {
     };
   };
 
+  // Helper to load patient-specific M2 Federated AI Risk Prediction
+  const getPatientM2Risk = () => {
+    if (!selectedPatient) return null;
+    const pid = selectedPatient.sourcePatientId || selectedPatient.patientId || selectedPatient.id;
+    try {
+      const cached = localStorage.getItem(`medisphere_patient_risk_${pid}`);
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  };
+
   // Generate Care Plan
   const handleGenerateCarePlan = async () => {
     if (!selectedPatient || generating) return;
@@ -292,6 +307,11 @@ export default function CarePlansPage() {
     const pName = (patientHealthData?.personalDetails
       ? `${patientHealthData.personalDetails.firstName || ''} ${patientHealthData.personalDetails.lastName || ''}`.trim()
       : null) || selectedPatient.name || selectedPatient.displayName;
+
+    const m2Risk = getPatientM2Risk();
+    const cvdRiskStr = m2Risk?.cvd
+      ? `${m2Risk.cvd.category} (${m2Risk.cvd.risk_percentage}%)`
+      : (snapshot?.riskData || null);
 
     const requestData = {
       patientId: pid,
@@ -309,6 +329,11 @@ export default function CarePlansPage() {
         sleepHours: snapshot?.sleepHours ?? null,
         conditions: snapshot?.conditions?.map(c => c.name).join(', ') || null,
         existingRisk: snapshot?.riskData || null,
+        cvdRisk: cvdRiskStr,
+        cvdRiskScore: m2Risk?.cvd?.risk_percentage ?? null,
+        diabetesRisk: m2Risk?.diabetes ? `${m2Risk.diabetes.category} (${m2Risk.diabetes.risk_percentage}%)` : null,
+        diabetesRiskScore: m2Risk?.diabetes?.risk_percentage ?? null,
+        riskSource: m2Risk ? 'M2_FEDERATED_AI' : 'CLINICAL_BASELINE'
       }
     };
 
