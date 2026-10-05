@@ -14,7 +14,6 @@ import {
   Bell,
   ClipboardList,
   CheckSquare,
-  FileBarChart,
   Cpu,
   HeartPulse
 } from 'lucide-react';
@@ -50,7 +49,6 @@ const sidebarSections = [
       { to: '/treatment-tracking', label: 'Treatment Tracking', icon: CheckSquare, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
       { to: '/health-monitoring', label: 'Health Monitoring', icon: HeartPulse, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
       { to: '/patient-progress', label: 'Patient Progress', icon: TrendingUp, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
-      { to: '/reports', label: 'Reports', icon: FileBarChart, roles: ['ADMIN', 'DOCTOR'] },
     ],
   },
   {
