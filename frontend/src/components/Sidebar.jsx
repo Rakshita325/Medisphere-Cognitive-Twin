@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -45,7 +45,7 @@ const sidebarSections = [
   {
     label: 'CLINICAL',
     items: [
-      { to: '/care-plans', label: 'Care Plans', icon: ClipboardList, roles: ['ADMIN', 'DOCTOR'] },
+      { to: '/care-plans', label: 'Care Plans', icon: ClipboardList, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
       { to: '/treatment-tracking', label: 'Treatment Tracking', icon: CheckSquare, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
       { to: '/health-monitoring', label: 'Health Monitoring', icon: HeartPulse, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
       { to: '/patient-progress', label: 'Patient Progress', icon: TrendingUp, roles: ['ADMIN', 'DOCTOR', 'NURSE'] },
@@ -61,6 +61,7 @@ const sidebarSections = [
 
 export default function Sidebar() {
   const { user, logout, hasRole } = useAuth();
+  const location = useLocation();
 
   const handleLogout = () => {
     logout();
@@ -68,6 +69,15 @@ export default function Sidebar() {
   };
 
   const displayName = user?.fullName || user?.username || 'User';
+
+  const isItemActive = (targetPath) => {
+    const currentPath = location.pathname.replace(/\/$/, '') || '/';
+    const normalizedTarget = targetPath.replace(/\/$/, '') || '/';
+    if (normalizedTarget === '/dashboard') {
+      return currentPath === '/dashboard';
+    }
+    return currentPath === normalizedTarget || currentPath.startsWith(normalizedTarget + '/');
+  };
 
   return (
     <aside className="app-sidebar">
@@ -86,11 +96,12 @@ export default function Sidebar() {
               <div className="sidebar-section-label">{section.label}</div>
               {visibleItems.map((item) => {
                 const Icon = item.icon;
+                const active = isItemActive(item.to);
                 return (
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                    className={() => `nav-item ${active ? 'active' : ''}`}
                   >
                     <Icon size={18} />
                     <span>{item.label}</span>

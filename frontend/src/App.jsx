@@ -104,7 +104,7 @@ function AuthenticatedLayout() {
               </ProtectedRoute>
             } />
             <Route path="/care-plans" element={
-              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR']}>
+              <ProtectedRoute allowedRoles={['ADMIN', 'DOCTOR', 'NURSE']}>
                 <CarePlansPage />
               </ProtectedRoute>
             } />

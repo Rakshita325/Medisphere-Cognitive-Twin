@@ -172,7 +172,9 @@ export default function PatientProgressPage() {
         }
         setSelectedPatient(initial);
         const initialPid = initial.sourcePatientId || initial.patientId || initial.id;
-        setSearchParams({ patientId: initialPid }, { replace: true });
+        if (urlPatientId !== initialPid) {
+          setSearchParams({ patientId: initialPid }, { replace: true });
+        }
         localStorage.setItem('medisphere_selected_patient_id', initialPid);
       }
     } catch (err) {
@@ -180,9 +182,28 @@ export default function PatientProgressPage() {
     } finally {
       setLoadingPatients(false);
     }
-  }, [urlPatientId]);
+  }, []);
 
-  useEffect(() => { loadPatients(); }, []);
+  useEffect(() => { loadPatients(); }, [loadPatients]);
+
+  // Sync patient selection when urlPatientId changes without reloading full roster
+  useEffect(() => {
+    if (patients.length > 0 && urlPatientId) {
+      const match = patients.find(p =>
+        String(p.id).toLowerCase() === String(urlPatientId).toLowerCase() ||
+        String(p.patientId).toLowerCase() === String(urlPatientId).toLowerCase() ||
+        String(p.sourcePatientId).toLowerCase() === String(urlPatientId).toLowerCase()
+      );
+      if (match) {
+        setSelectedPatient(prev => {
+          const prevPid = prev?.sourcePatientId || prev?.patientId || prev?.id;
+          const newPid = match.sourcePatientId || match.patientId || match.id;
+          return prevPid === newPid ? prev : match;
+        });
+        localStorage.setItem('medisphere_selected_patient_id', urlPatientId);
+      }
+    }
+  }, [urlPatientId, patients]);
 
   // ─── Patient selection handler ───
   const handleSelectPatient = (patient) => {
