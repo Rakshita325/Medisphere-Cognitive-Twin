@@ -20,7 +20,9 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: '../backend/src/main/resources/static',
+    outDir: process.env.BUILD_TARGET === 'backend' || process.env.BUILD_FOR_BACKEND === 'true'
+      ? '../backend/src/main/resources/static'
+      : 'dist',
     emptyOutDir: true
   }
 })
